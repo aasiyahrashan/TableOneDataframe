@@ -22,7 +22,7 @@ data(mtcars)
 
 ```{r}
 # Making the stata variable a factor
-mtcars$cyl <- as.factor(mtcars$cyl)
+mtcars$cyl <- factor(mtcars$cyl)
 ```
 
 ```{r}

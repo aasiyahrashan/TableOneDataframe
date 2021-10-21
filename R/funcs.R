@@ -116,7 +116,9 @@ get_n_percent <- function(data, strata, variable, name, output){
 #'
 #' @examples
 make_output_df <- function(data, strata){
-  levels <- levels(data[, strata])
+  # Needs to be a vector to extract the levels.
+  levels <- levels(data %>%
+                     pull(strata))
   output <- data.frame(matrix(ncol = 2 + length(levels), nrow = 0))
   colnames(output) <- c("Variable", "Total", levels)
   output

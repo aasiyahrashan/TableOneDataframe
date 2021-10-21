@@ -5,5 +5,5 @@ No tests written yet.
 To use, try 
 
 ```
-install_github("aasiyahrashan/TableOneDataframe")
+devtools::install_github("aasiyahrashan/TableOneDataframe")
 ```
