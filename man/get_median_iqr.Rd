@@ -2,7 +2,8 @@
 % Please edit documentation in R/funcs.R
 \name{get_median_iqr}
 \alias{get_median_iqr}
-\title{Title Get Median and IQR for a particular variable. By group.}
+\title{Title Get Median and IQR for a particular variable. By group.
+Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.s}
 \usage{
 get_median_iqr(data, strata, variable, name, output)
 }
@@ -19,4 +20,5 @@ get_median_iqr(data, strata, variable, name, output)
 }
 \description{
 Title Get Median and IQR for a particular variable. By group.
+Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.s
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/funcs.R
 \name{get_n_percent}
 \alias{get_n_percent}
-\title{Title}
+\title{Gets count and percentage for factor variables by group. Does a chisquare test if the 'output' argument has a p value column in it.}
 \usage{
 get_n_percent(data, strata, variable, name, output)
 }
@@ -13,5 +13,5 @@ get_n_percent(data, strata, variable, name, output)
 
 }
 \description{
-Title
+Gets count and percentage for factor variables by group. Does a chisquare test if the 'output' argument has a p value column in it.
 }

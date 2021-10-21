@@ -27,7 +27,8 @@ mtcars$cyl <- factor(mtcars$cyl)
 
 ```{r}
 # Creating an empty output table to store results. Make sure the 'strata' variable is a factor.
-output <- make_output_df(mtcars, "cyl")
+# The include_tests argument determines if all of the functions after do p-value testing.
+output <- make_output_df(mtcars, "cyl", include_tests = TRUE)
 # Median IQR
 output <- get_median_iqr(mtcars, 'cyl', 'disp', "Display", output)
 
