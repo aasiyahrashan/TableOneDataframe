@@ -1,0 +1,42 @@
+---
+title: "Introduction"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(MakeTables)
+data(mtcars)
+```
+
+
+```{r}
+# Making the stata variable a factor
+mtcars$cyl <- as.factor(mtcars$cyl)
+```
+
+```{r}
+# Creating an empty output table to store results. Make sure the 'strata' variable is a factor.
+output <- make_output_df(mtcars, "cyl")
+# Median IQR
+output <- get_median_iqr(mtcars, 'cyl', 'disp', "Display", output)
+
+# N %
+# Adding a random NA to demonstrate. 
+mtcars[3, 'gear'] <- NA
+# We want to treat gears as a factor rather than a number
+mtcars$gear <- as.factor(mtcars$gear)
+output <- get_n_percent(mtcars, 'cyl', 'gear', "Gear", output)
+
+# Output is just a dataframe, so can be used with kable, or written to excel/csv.
+```
