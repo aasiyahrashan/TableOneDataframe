@@ -31,6 +31,8 @@ mtcars$cyl <- factor(mtcars$cyl)
 output <- make_output_df(mtcars, "cyl", include_tests = TRUE)
 # Median IQR
 output <- get_median_iqr(mtcars, 'cyl', 'disp', "Display", output)
+# Mean (SD)
+output <- get_mean_sd(mtcars, 'cyl', 'hp', "HP", output)
 
 # N %
 # Adding a random NA to demonstrate. 

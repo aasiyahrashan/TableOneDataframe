@@ -54,6 +54,61 @@ get_median_iqr <- function(data, strata, variable, name, output) {
   output
 }
 
+#' Title Get mean and SD for a particular variable. By group.
+#' Does a one-way ANOVA test (t-test if only 2 groups) if there the output dataframe had a p value column.
+#'
+#' @param data data frame containing required data
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param variable name of variable to be summarised
+#' @param name string name to put in the row.
+#' @param output
+#'
+#' @import tidyverse
+#'
+#' @export
+get_mean_sd <- function(data, strata, variable, name, output) {
+
+  # Saving the column names for later.
+  colnames <- colnames(output)
+
+  # I get the median and IQR for whichever variable, paste them together as characters,
+  # and save it all in the output dataframe
+
+  by_strata <- data %>%
+    group_by(get(strata)) %>%
+    summarise(clean = paste0(round(mean(get(variable), na.rm = TRUE), 2), " (",
+                             round(sd(get(variable), na.rm = TRUE), 2), ")")) %>%
+    select(clean) %>%
+    t()
+
+  # Now, getting the total to put at the beginning.
+  total <- data %>%
+    summarise(clean = paste0(round(mean(get(variable), na.rm = TRUE), 2), " (",
+                             round(sd(get(variable), na.rm = TRUE), 2), ")")) %>%
+    select(clean) %>%
+    t()
+
+  # Filling the first variable in with the row label.
+  all <- c(paste0(name, " Mean (SD)"), total, by_strata)
+
+  ## Doing a oneway ANOVA test.
+  if("p" %in% colnames){
+    test <- data %>%
+      summarise(test = format(round(oneway.test(get(variable) ~ get(strata))$p.value, 5),
+                              nsmall = 5, scientific = FALSE, paired = FALSE)) %>%
+      select(test) %>%
+      t()
+    print(all)
+    all <- c(all, test)
+  }
+
+  # Renaming the variables to let the 2 data frames stack on top of each other.
+  output <- rbind(output, all, stringsAsFactors = FALSE)
+  colnames(output) <- colnames
+  output
+}
+
+
 #' Gets count and percentage for factor variables by group. Does a chisquare test if the 'output' argument has a p value column in it.
 #'
 #' @param data
