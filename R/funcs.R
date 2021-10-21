@@ -137,12 +137,12 @@ get_n_percent <- function(data, strata, variable, name, output){
   colnames <- colnames(output)
 
   # Converting the variable to a factor if it isn't already.
-  if(!is.factor(data[, variable])){
-    data[, variable] <- factor(data[, variable])
+  if(!is.factor(data[[variable]])){
+    data[[variable]] <- factor(data[[variable]])
   }
 
   # replacing NAs with missing, and putting it last.
-  data[, variable] <- fct_explicit_na(data[, variable], na_level = "Missing")
+  data[[variable]] <- fct_explicit_na(data[[variable]], na_level = "Missing")
 
   # Doing it for the strata.
   by_strata <-
@@ -211,8 +211,7 @@ get_n_percent <- function(data, strata, variable, name, output){
 #' @examples
 make_output_df <- function(data, strata, include_tests = FALSE){
   # Needs to be a vector to extract the levels.
-  levels <- levels(data %>%
-                     pull(strata))
+  levels <- levels(data[[strata]])
 
   if(include_tests){
     output <- data.frame(matrix(ncol = 3 + length(levels), nrow = 0))
