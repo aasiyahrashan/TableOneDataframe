@@ -1,16 +1,18 @@
 #' Title Get Median and IQR for a particular variable. By group.
 #' Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.s
 #'
-#' @param data data frame containing required data
+#' @param data tibble containing data. Can't be a grouped tibble
 #' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
 #' @param variable name of variable to be summarised
 #' @param name string name to put in the row.
 #' @param output
 #'
-#' @import tidyverse
+#' @import dplyr
 #'
 #' @export
 get_median_iqr <- function(data, strata, variable, name, output) {
+
+  # Remember to add check that the variable is numeric.
 
   # Saving the column names for later.
   colnames <- colnames(output)
@@ -44,7 +46,6 @@ get_median_iqr <- function(data, strata, variable, name, output) {
                                nsmall = 5, scientific = FALSE, paired = FALSE)) %>%
       select(test) %>%
       t()
-    print(all)
     all <- c(all, test)
   }
 
@@ -57,16 +58,18 @@ get_median_iqr <- function(data, strata, variable, name, output) {
 #' Title Get mean and SD for a particular variable. By group.
 #' Does a one-way ANOVA test (t-test if only 2 groups) if there the output dataframe had a p value column.
 #'
-#' @param data data frame containing required data
+#' @param data tibble containing data. Can't be a grouped tibble
 #' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
 #' @param variable name of variable to be summarised
 #' @param name string name to put in the row.
 #' @param output
 #'
-#' @import tidyverse
+#' @import dplyr
 #'
 #' @export
 get_mean_sd <- function(data, strata, variable, name, output) {
+
+  # Remember to add check that the variable is numeric.
 
   # Saving the column names for later.
   colnames <- colnames(output)
@@ -98,7 +101,6 @@ get_mean_sd <- function(data, strata, variable, name, output) {
                               nsmall = 5, scientific = FALSE, paired = FALSE)) %>%
       select(test) %>%
       t()
-    print(all)
     all <- c(all, test)
   }
 
@@ -111,11 +113,15 @@ get_mean_sd <- function(data, strata, variable, name, output) {
 
 #' Gets count and percentage for factor variables by group. Does a chisquare test if the 'output' argument has a p value column in it.
 #'
-#' @param data
+#' @param data tibble containing data. Can't be a grouped tibble
 #' @param strata
 #' @param variable
 #' @param name
 #' @param output
+#'
+#' @import dplyr
+#' @import forcats
+#' @import tidyr
 #'
 #' @return
 #' @export
@@ -127,10 +133,7 @@ get_n_percent <- function(data, strata, variable, name, output){
   colnames <- colnames(output)
 
   # replacing NAs with missing, and putting it last.
-  if(sum(is.na(data[, variable])) !=0) {
-    levels(data[, variable]) <- c(levels(data[, variable]), "Missing")
-    data[, variable][is.na(data[, variable])] = "Missing"
-  }
+  data[, variable] <- fct_explicit_na(data[, variable], na_level = "Missing")
 
   # Doing it for the strata.
   by_strata <-
@@ -189,7 +192,7 @@ get_n_percent <- function(data, strata, variable, name, output){
 #' @param strata A factor variable to stratify by.
 #' @param include_tests Should it create a space for p-values?
 #'
-#' @import tidyverse
+#' @import dplyr
 #'
 #' @return
 #' @export

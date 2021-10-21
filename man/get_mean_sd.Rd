@@ -8,7 +8,7 @@ Does a one-way ANOVA test (t-test if only 2 groups) if there the output datafram
 get_mean_sd(data, strata, variable, name, output)
 }
 \arguments{
-\item{data}{data frame containing required data}
+\item{data}{tibble containing data. Can't be a grouped tibble}
 
 \item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work.}
 

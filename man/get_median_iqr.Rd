@@ -8,7 +8,7 @@ Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value co
 get_median_iqr(data, strata, variable, name, output)
 }
 \arguments{
-\item{data}{data frame containing required data}
+\item{data}{tibble containing data. Can't be a grouped tibble}
 
 \item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work.}
 

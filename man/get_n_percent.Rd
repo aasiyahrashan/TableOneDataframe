@@ -7,6 +7,8 @@
 get_n_percent(data, strata, variable, name, output)
 }
 \arguments{
+\item{data}{tibble containing data. Can't be a grouped tibble}
+
 \item{output}{}
 }
 \value{
