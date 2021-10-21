@@ -2,8 +2,7 @@
 % Please edit documentation in R/funcs.R
 \name{get_mean_sd}
 \alias{get_mean_sd}
-\title{Title Get mean and SD for a particular variable. By group.
-Does a one-way ANOVA test (t-test if only 2 groups) if there the output dataframe had a p value column.}
+\title{Title Get mean and SD for a particular variable. By group.}
 \usage{
 get_mean_sd(data, strata, variable, name, output)
 }
@@ -19,6 +18,5 @@ get_mean_sd(data, strata, variable, name, output)
 \item{output}{}
 }
 \description{
-Title Get mean and SD for a particular variable. By group.
 Does a one-way ANOVA test (t-test if only 2 groups) if there the output dataframe had a p value column.
 }

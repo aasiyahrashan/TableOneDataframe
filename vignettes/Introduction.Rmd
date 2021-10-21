@@ -41,5 +41,8 @@ mtcars[3, 'gear'] <- NA
 mtcars$gear <- as.factor(mtcars$gear)
 output <- get_n_percent(mtcars, 'cyl', 'gear', "Gear", output)
 
+# If it's not a factor, gets converted anyway.
+output <- get_n_percent(mtcars, 'cyl', 'carb', "Carb", output)
+
 # Output is just a dataframe, so can be used with kable, or written to excel/csv.
 ```

@@ -1,4 +1,5 @@
 #' Title Get Median and IQR for a particular variable. By group.
+#'
 #' Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.s
 #'
 #' @param data tibble containing data. Can't be a grouped tibble
@@ -56,6 +57,7 @@ get_median_iqr <- function(data, strata, variable, name, output) {
 }
 
 #' Title Get mean and SD for a particular variable. By group.
+#'
 #' Does a one-way ANOVA test (t-test if only 2 groups) if there the output dataframe had a p value column.
 #'
 #' @param data tibble containing data. Can't be a grouped tibble
@@ -111,11 +113,13 @@ get_mean_sd <- function(data, strata, variable, name, output) {
 }
 
 
+#' Get count and percentage. By group.
+#'
 #' Gets count and percentage for factor variables by group. Does a chisquare test if the 'output' argument has a p value column in it.
 #'
 #' @param data tibble containing data. Can't be a grouped tibble
 #' @param strata
-#' @param variable
+#' @param variable Ideally a factor variable. If not, gets converted to factor anyway.
 #' @param name
 #' @param output
 #'
@@ -131,6 +135,11 @@ get_n_percent <- function(data, strata, variable, name, output){
 
   # Saving the column names for later.
   colnames <- colnames(output)
+
+  # Converting the variable to a factor if it isn't already.
+  if(!is.factor(data[, variable])){
+    data[, variable] <- factor(data[, variable])
+  }
 
   # replacing NAs with missing, and putting it last.
   data[, variable] <- fct_explicit_na(data[, variable], na_level = "Missing")
@@ -188,6 +197,8 @@ get_n_percent <- function(data, strata, variable, name, output){
   output
 }
 
+#' Make output dataframe
+#'
 #' @param data
 #' @param strata A factor variable to stratify by.
 #' @param include_tests Should it create a space for p-values?

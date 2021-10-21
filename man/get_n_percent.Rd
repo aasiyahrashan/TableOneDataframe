@@ -2,12 +2,14 @@
 % Please edit documentation in R/funcs.R
 \name{get_n_percent}
 \alias{get_n_percent}
-\title{Gets count and percentage for factor variables by group. Does a chisquare test if the 'output' argument has a p value column in it.}
+\title{Get count and percentage. By group.}
 \usage{
 get_n_percent(data, strata, variable, name, output)
 }
 \arguments{
 \item{data}{tibble containing data. Can't be a grouped tibble}
+
+\item{variable}{Ideally a factor variable. If not, gets converted to factor anyway.}
 
 \item{output}{}
 }
