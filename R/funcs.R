@@ -199,6 +199,7 @@ get_n_percent <- function(data, strata, variable, name, output){
 
 #' Make output dataframe
 #'
+#' Includes neat column names with counts of observations in each group.
 #' @param data
 #' @param strata A factor variable to stratify by.
 #' @param include_tests Should it create a space for p-values?
@@ -210,16 +211,28 @@ get_n_percent <- function(data, strata, variable, name, output){
 #'
 #' @examples
 make_output_df <- function(data, strata, include_tests = FALSE){
-  # Needs to be a vector to extract the levels.
+
+  # Variable needs to be a factor.
+  if(!is.factor(data[[strata]])){
+    stop("Strata variable needs to be a factor")
+  }
+
+  # Getting levels counts
   levels <- levels(data[[strata]])
+  strata_names <- data %>%
+    group_by(get(strata)) %>%
+    summarise(n = n()) %>%
+    mutate(names = paste0(`get(strata)`, " (N=", n, ")"))
+
+  total_name <- paste0("Total", " (N=", nrow(data), ")")
 
   if(include_tests){
     output <- data.frame(matrix(ncol = 3 + length(levels), nrow = 0))
-    colnames(output) <- c("Variable", "Total", levels, "p")
+    colnames(output) <- c("Variable", total_name, strata_names$names, "p")
   }
   else{
     output <- data.frame(matrix(ncol = 2 + length(levels), nrow = 0))
-    colnames(output) <- c("Variable", "Total", levels)
+    colnames(output) <- c("Variable", total_name, strata_names$names)
   }
   output
 }

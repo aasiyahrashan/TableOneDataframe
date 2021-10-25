@@ -15,5 +15,5 @@ make_output_df(data, strata, include_tests = FALSE)
 
 }
 \description{
-Make output dataframe
+Includes neat column names with counts of observations in each group.
 }
