@@ -332,7 +332,7 @@ get_n_percent_value <- function(data, strata, variable, value, name, output){
     t()
 
   # Filling the first variable in with the row label.
-  all <- c(paste0(name, "N(%)"), total, by_strata)
+  all <- c(paste0(name, " N(%)"), total, by_strata)
 
   ## No test.
   if("p" %in% colnames){
