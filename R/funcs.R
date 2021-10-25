@@ -264,6 +264,72 @@ get_count <- function(data, strata, variable, name, output){
     t()
 
   # Filling the first variable in with the row label.
+  all <- c(paste0(name, " N(%)"), total, by_strata)
+
+  ## No test.
+  if("p" %in% colnames){
+    test <- data %>%
+      summarise(test = "") %>%
+      select(test) %>%
+      t()
+    all <- c(all, test)
+  }
+
+  # Renaming the variables to let the 2 data frames stack on top of each other.
+  output <- rbind(output, all, stringsAsFactors = FALSE)
+  colnames(output) <- colnames
+  output
+}
+
+#' Count number of times a value is present in a variable
+#'
+#' @param data tibble containing data. Can't be a grouped tibble
+#' @param strata
+#' @param variable
+#' @param value Which value to count.
+#' @param name
+#' @param output
+#'
+#' @import dplyr
+#' @import forcats
+#' @import tidyr
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_n_percent_value <- function(data, strata, variable, value, name, output){
+
+
+  # Strata needs to be a factor.
+  if(!is.factor(data[[strata]])){
+    stop("Strata variable needs to be a factor")
+  }
+
+  # Saving the column names for later.
+  colnames <- colnames(output)
+
+  # Doing it for the strata.
+  by_strata <-
+    data %>%
+    group_by(get(strata), .drop = FALSE) %>%
+    summarise(n = sum(get(variable) == value),
+              total = n(),
+              perc = paste0(n, " (", round(100*n/total, 2), ")")) %>%
+    select(perc) %>%
+    t()
+
+
+  # Now the total.
+  total <-
+    data %>%
+    summarise(n = sum(get(variable) == value),
+              total = n(),
+              perc = paste0(n, " (", round(100*n/total, 2), ")")) %>%
+    select(perc) %>%
+    t()
+
+  # Filling the first variable in with the row label.
   all <- c(paste0(name), total, by_strata)
 
   ## No test.

@@ -36,8 +36,10 @@ output <- get_median_iqr(mtcars, 'cyl', 'disp', "Display", output)
 # Mean (SD)
 output <- get_mean_sd(mtcars, 'cyl', 'hp', "HP", output)
 
-# Count
+# Count non missing
 output <- get_count(mtcars, 'cyl', 'wt', "WT", output)
+# Count specific value
+output <- get_n_percent_value(mtcars, 'cyl', 'vs', 1, "VS = 1", output)
 
 # N %
 # Adding a random NA to demonstrate. 
