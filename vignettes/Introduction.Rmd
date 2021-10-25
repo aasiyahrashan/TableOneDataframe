@@ -23,10 +23,12 @@ data(mtcars)
 ```{r}
 # Making the stata variable a factor
 mtcars$cyl <- factor(mtcars$cyl)
+levels(mtcars$cyl) <- c("4", "6", "8", "Extra")
 ```
 
 ```{r}
 # Creating an empty output table to store results. Make sure the 'strata' variable is a factor.
+# Empty levels get a separate column.
 # The include_tests argument determines if all of the functions after do p-value testing.
 output <- make_output_df(mtcars, "cyl", include_tests = TRUE)
 # Median IQR

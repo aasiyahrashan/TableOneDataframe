@@ -13,7 +13,14 @@
 #' @export
 get_median_iqr <- function(data, strata, variable, name, output) {
 
-  # Remember to add check that the variable is numeric.
+  # Strata variable needs to be a factor.
+  if(!is.factor(data[[strata]])){
+    stop("Strata variable needs to be a factor")
+  }
+  # Variable needs to be numeric
+  if(!is.numeric(data[[variable]])){
+    stop("Variable needs to be numeric")
+  }
 
   # Saving the column names for later.
   colnames <- colnames(output)
@@ -22,7 +29,7 @@ get_median_iqr <- function(data, strata, variable, name, output) {
   # and save it all in the output dataframe
 
   by_strata <- data %>%
-    group_by(get(strata)) %>%
+    group_by(get(strata), .drop = FALSE) %>%
     summarise(clean = paste0(round(median(get(variable), na.rm = TRUE), 2), " (",
                              round(quantile(get(variable), 0.25, na.rm = TRUE), 2), " - ",
                              round(quantile(get(variable), 0.75, na.rm = TRUE), 2), ")")) %>%
@@ -71,7 +78,15 @@ get_median_iqr <- function(data, strata, variable, name, output) {
 #' @export
 get_mean_sd <- function(data, strata, variable, name, output) {
 
-  # Remember to add check that the variable is numeric.
+
+  # Strata variable needs to be a factor.
+  if(!is.factor(data[[strata]])){
+    stop("Strata variable needs to be a factor")
+  }
+  # Variable needs to be numeric
+  if(!is.numeric(data[[variable]])){
+    stop("Variable needs to be numeric")
+  }
 
   # Saving the column names for later.
   colnames <- colnames(output)
@@ -80,7 +95,7 @@ get_mean_sd <- function(data, strata, variable, name, output) {
   # and save it all in the output dataframe
 
   by_strata <- data %>%
-    group_by(get(strata)) %>%
+    group_by(get(strata), .drop = FALSE) %>%
     summarise(clean = paste0(round(mean(get(variable), na.rm = TRUE), 2), " (",
                              round(sd(get(variable), na.rm = TRUE), 2), ")")) %>%
     select(clean) %>%
@@ -133,6 +148,12 @@ get_mean_sd <- function(data, strata, variable, name, output) {
 #' @examples
 get_n_percent <- function(data, strata, variable, name, output){
 
+
+  # Variable needs to be a factor.
+  if(!is.factor(data[[strata]])){
+    stop("Strata variable needs to be a factor")
+  }
+
   # Saving the column names for later.
   colnames <- colnames(output)
 
@@ -147,7 +168,7 @@ get_n_percent <- function(data, strata, variable, name, output){
   # Doing it for the strata.
   by_strata <-
     data %>%
-    group_by(get(strata), get(variable)) %>%
+    group_by(get(strata), get(variable), .drop = FALSE) %>%
     summarise(n = n()) %>%
     ungroup() %>%
     complete(`get(strata)`, `get(variable)`, fill = list(n=0)) %>%
@@ -162,7 +183,7 @@ get_n_percent <- function(data, strata, variable, name, output){
   # Now the total.
   total <-
     data %>%
-    group_by(get(variable)) %>%
+    group_by(get(variable), .drop = FALSE) %>%
     summarise(n = n()) %>%
     ungroup() %>%
     complete(`get(variable)`, fill = list(n=0)) %>%
@@ -217,13 +238,19 @@ get_n_percent <- function(data, strata, variable, name, output){
 #' @examples
 get_count <- function(data, strata, variable, name, output){
 
+
+  # Strata needs to be a factor.
+  if(!is.factor(data[[strata]])){
+    stop("Strata variable needs to be a factor")
+  }
+
   # Saving the column names for later.
   colnames <- colnames(output)
 
   # Doing it for the strata.
   by_strata <-
     data %>%
-    group_by(get(strata)) %>%
+    group_by(get(strata), .drop = FALSE) %>%
     summarise(n = sum(!is.na(get(variable)))) %>%
     select(n) %>%
     t()
@@ -276,7 +303,7 @@ make_output_df <- function(data, strata, include_tests = FALSE){
   # Getting levels counts
   levels <- levels(data[[strata]])
   strata_names <- data %>%
-    group_by(get(strata)) %>%
+    group_by(get(strata), .drop=FALSE) %>%
     summarise(n = n()) %>%
     mutate(names = paste0(`get(strata)`, " (N=", n, ")"))
 
