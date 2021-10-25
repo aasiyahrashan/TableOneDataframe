@@ -34,6 +34,9 @@ output <- get_median_iqr(mtcars, 'cyl', 'disp', "Display", output)
 # Mean (SD)
 output <- get_mean_sd(mtcars, 'cyl', 'hp', "HP", output)
 
+# Count
+output <- get_count(mtcars, 'cyl', 'wt', "WT", output)
+
 # N %
 # Adding a random NA to demonstrate. 
 mtcars[3, 'gear'] <- NA

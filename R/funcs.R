@@ -197,6 +197,62 @@ get_n_percent <- function(data, strata, variable, name, output){
   output
 }
 
+#' Count number of non-missing values
+#'
+#' Displays number of non-missing rows.
+#'
+#' @param data tibble containing data. Can't be a grouped tibble
+#' @param strata
+#' @param variable
+#' @param name
+#' @param output
+#'
+#' @import dplyr
+#' @import forcats
+#' @import tidyr
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_count <- function(data, strata, variable, name, output){
+
+  # Saving the column names for later.
+  colnames <- colnames(output)
+
+  # Doing it for the strata.
+  by_strata <-
+    data %>%
+    group_by(get(strata)) %>%
+    summarise(n = sum(!is.na(get(variable)))) %>%
+    select(n) %>%
+    t()
+
+
+  # Now the total.
+  total <-
+    data %>%
+    summarise(n = sum(!is.na(get(variable)))) %>%
+    select(n) %>%
+    t()
+
+  # Filling the first variable in with the row label.
+  all <- c(paste0(name), total, by_strata)
+
+  ## No test.
+  if("p" %in% colnames){
+    test <- data %>%
+      summarise(test = "") %>%
+      select(test) %>%
+      t()
+    all <- c(all, test)
+  }
+
+  # Renaming the variables to let the 2 data frames stack on top of each other.
+  output <- rbind(output, all, stringsAsFactors = FALSE)
+  colnames(output) <- colnames
+  output
+}
 #' Make output dataframe
 #'
 #' Includes neat column names with counts of observations in each group.
