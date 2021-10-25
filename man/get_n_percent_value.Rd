@@ -17,5 +17,5 @@ get_n_percent_value(data, strata, variable, value, name, output)
 
 }
 \description{
-Count number of times a value is present in a variable
+NA values are non included in the numerator, but are included in the denominator.
 }

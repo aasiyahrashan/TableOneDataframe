@@ -283,6 +283,8 @@ get_count <- function(data, strata, variable, name, output){
 
 #' Count number of times a value is present in a variable
 #'
+#' NA values are non included in the numerator, but are included in the denominator.
+#'
 #' @param data tibble containing data. Can't be a grouped tibble
 #' @param strata
 #' @param variable
@@ -313,7 +315,7 @@ get_n_percent_value <- function(data, strata, variable, value, name, output){
   by_strata <-
     data %>%
     group_by(get(strata), .drop = FALSE) %>%
-    summarise(n = sum(get(variable) == value),
+    summarise(n = sum(get(variable) == value, na.rm = TRUE),
               total = n(),
               perc = paste0(n, " (", round(100*n/total, 2), ")")) %>%
     select(perc) %>%
@@ -323,14 +325,14 @@ get_n_percent_value <- function(data, strata, variable, value, name, output){
   # Now the total.
   total <-
     data %>%
-    summarise(n = sum(get(variable) == value),
+    summarise(n = sum(get(variable) == value, na.rm = TRUE),
               total = n(),
               perc = paste0(n, " (", round(100*n/total, 2), ")")) %>%
     select(perc) %>%
     t()
 
   # Filling the first variable in with the row label.
-  all <- c(paste0(name), total, by_strata)
+  all <- c(paste0(name, "N(%)"), total, by_strata)
 
   ## No test.
   if("p" %in% colnames){
