@@ -17,5 +17,7 @@ get_n_percent(data, strata, variable, name, output)
 
 }
 \description{
-Gets count and percentage for factor variables by group. Does a chisquare test if the 'output' argument has a p value column in it.
+Gets count and percentage for factor variables by group.
+NAs and empty strings are converted to a separate level "Missing"
+Does a chisquare test if the 'output' argument has a p value column in it.
 }

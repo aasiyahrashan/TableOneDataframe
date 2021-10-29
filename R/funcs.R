@@ -130,7 +130,9 @@ get_mean_sd <- function(data, strata, variable, name, output) {
 
 #' Get count and percentage. By group.
 #'
-#' Gets count and percentage for factor variables by group. Does a chisquare test if the 'output' argument has a p value column in it.
+#' Gets count and percentage for factor variables by group.
+#' NAs and empty strings are converted to a separate level "Missing"
+#' Does a chisquare test if the 'output' argument has a p value column in it.
 #'
 #' @param data tibble containing data. Can't be a grouped tibble
 #' @param strata
@@ -164,6 +166,10 @@ get_n_percent <- function(data, strata, variable, name, output){
 
   # replacing NAs with missing, and putting it last.
   data[[variable]] <- fct_explicit_na(data[[variable]], na_level = "Missing")
+
+  # Also replacing empty strings with the word 'Missing' and putting that last.
+  data[[variable]] <- suppressWarnings(fct_recode(data[[variable]], Missing = ""))
+  data[[variable]] <- fct_relevel(data[[variable]], "Missing", after = Inf)
 
   # Doing it for the strata.
   by_strata <-
