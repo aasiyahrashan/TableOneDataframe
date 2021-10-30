@@ -169,7 +169,7 @@ get_n_percent <- function(data, strata, variable, name, output){
 
   # Also replacing empty strings with the word 'Missing' and putting that last.
   data[[variable]] <- suppressWarnings(fct_recode(data[[variable]], Missing = ""))
-  data[[variable]] <- fct_relevel(data[[variable]], "Missing", after = Inf)
+  data[[variable]] <- suppressWarnings(fct_relevel(data[[variable]], "Missing", after = Inf))
 
   # Doing it for the strata.
   by_strata <-
