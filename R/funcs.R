@@ -187,7 +187,6 @@ get_n_percent <- function(data, strata, variable, name, output, id = ""){
     total_den <- nrow(data)
   }
 
-
   # Doing it for the strata.
   by_strata <-
     data %>%
@@ -199,8 +198,8 @@ get_n_percent <- function(data, strata, variable, name, output, id = ""){
     group_by(`get(strata)`) %>%
     mutate(perc = paste0(n, " (", round(100*n/den, 2), ")")) %>%
     select( -n, -den) %>%
-    pivot_wider(names_from = `get(strata)`, values_from = perc)
-
+    pivot_wider(names_from = `get(strata)`, values_from = perc) %>%
+    select(-`get(variable)`)
 
   # Now the total.
   total <-
