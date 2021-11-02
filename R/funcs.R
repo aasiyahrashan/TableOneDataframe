@@ -179,7 +179,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = ""){
       distinct(across(id, strata)) %>%
       group_by(get(strata)) %>%
       summarise(den = n())
-    total_den <- n_distinct(comorbidities[[id]])
+    total_den <- n_distinct(data[[id]])
   } else {
     denominators <- data %>%
       group_by(get(strata)) %>%
