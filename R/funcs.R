@@ -176,7 +176,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = ""){
   # everthing gets counted once per ID. If not, once per row.
   if(id != ""){
     denominators <- data %>%
-      distinct(across(id, strata)) %>%
+      distinct(across(c(id, strata))) %>%
       group_by(get(strata)) %>%
       summarise(den = n())
     total_den <- n_distinct(data[[id]])
