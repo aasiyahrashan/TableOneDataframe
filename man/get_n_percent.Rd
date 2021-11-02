@@ -4,14 +4,14 @@
 \alias{get_n_percent}
 \title{Get count and percentage. By group.}
 \usage{
-get_n_percent(data, strata, variable, name, output)
+get_n_percent(data, strata, variable, name, output, id)
 }
 \arguments{
 \item{data}{tibble containing data. Can't be a grouped tibble}
 
 \item{variable}{Ideally a factor variable. If not, gets converted to factor anyway.}
 
-\item{output}{}
+\item{id}{Optional. Character vector containing name of variable to use when counting the denominator. Allows the sum of the numerators to be greater than 100 if there is more than one row per denominator variable.}
 }
 \value{
 
@@ -20,4 +20,5 @@ get_n_percent(data, strata, variable, name, output)
 Gets count and percentage for factor variables by group.
 NAs and empty strings are converted to a separate level "Missing"
 Does a chisquare test if the 'output' argument has a p value column in it.
+Unless ID variable is specified, the denominator is the number of rows in the dataset.
 }

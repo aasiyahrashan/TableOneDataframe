@@ -133,12 +133,13 @@ get_mean_sd <- function(data, strata, variable, name, output) {
 #' Gets count and percentage for factor variables by group.
 #' NAs and empty strings are converted to a separate level "Missing"
 #' Does a chisquare test if the 'output' argument has a p value column in it.
-#'
+#' Unless ID variable is specified, the denominator is the number of rows in the dataset.
 #' @param data tibble containing data. Can't be a grouped tibble
 #' @param strata
 #' @param variable Ideally a factor variable. If not, gets converted to factor anyway.
 #' @param name
 #' @param output
+#' @param id Optional. Character vector containing name of variable to use when counting the denominator. Allows the sum of the numerators to be greater than 100 if there is more than one row per denominator variable.
 #'
 #' @import dplyr
 #' @import forcats
@@ -148,7 +149,7 @@ get_mean_sd <- function(data, strata, variable, name, output) {
 #' @export
 #'
 #' @examples
-get_n_percent <- function(data, strata, variable, name, output){
+get_n_percent <- function(data, strata, variable, name, output, id){
 
 
   # Variable needs to be a factor.
@@ -171,6 +172,22 @@ get_n_percent <- function(data, strata, variable, name, output){
   data[[variable]] <- suppressWarnings(fct_recode(data[[variable]], Missing = ""))
   data[[variable]] <- suppressWarnings(fct_relevel(data[[variable]], "Missing", after = Inf))
 
+  # Working out what the denominator should be. If ID is specified,
+  # everthing gets counted once per ID. If not, once per row.
+  if(id != ""){
+    denominators <- data %>%
+      distinct(across(id, strata)) %>%
+      group_by(get(strata)) %>%
+      summarise(den = n())
+    total_den <- n_distinct(comorbidities[[id]])
+  } else {
+    denominators <- data %>%
+      group_by(get(strata)) %>%
+      summarise(den = n())
+    total_den <- nrow(data)
+  }
+
+
   # Doing it for the strata.
   by_strata <-
     data %>%
@@ -178,12 +195,11 @@ get_n_percent <- function(data, strata, variable, name, output){
     summarise(n = n()) %>%
     ungroup() %>%
     complete(`get(strata)`, `get(variable)`, fill = list(n=0)) %>%
+    left_join(denominators, by = c("get(strata)")) %>%
     group_by(`get(strata)`) %>%
-    mutate(total= sum(n),
-           perc = paste0(n, " (", round(100*n/total, 2), ")")) %>%
-    select(-total, -n) %>%
-    pivot_wider(names_from = `get(strata)`, values_from = perc) %>%
-    select(-`get(variable)`)
+    mutate(perc = paste0(n, " (", round(100*n/den, 2), ")")) %>%
+    select( -n, -den) %>%
+    pivot_wider(names_from = `get(strata)`, values_from = perc)
 
 
   # Now the total.
@@ -193,7 +209,7 @@ get_n_percent <- function(data, strata, variable, name, output){
     summarise(n = n()) %>%
     ungroup() %>%
     complete(`get(variable)`, fill = list(n=0)) %>%
-    mutate(perc = paste0(n, " (", round(100*n/sum(n), 2), ")")) %>%
+    mutate(perc = paste0(n, " (", round(100*n/total_den, 2), ")")) %>%
     select(-n)
 
   # Joining them together
