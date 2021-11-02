@@ -4,7 +4,7 @@
 \alias{get_n_percent}
 \title{Get count and percentage. By group.}
 \usage{
-get_n_percent(data, strata, variable, name, output, id)
+get_n_percent(data, strata, variable, name, output, id = "")
 }
 \arguments{
 \item{data}{tibble containing data. Can't be a grouped tibble}

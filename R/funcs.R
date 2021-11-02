@@ -149,7 +149,7 @@ get_mean_sd <- function(data, strata, variable, name, output) {
 #' @export
 #'
 #' @examples
-get_n_percent <- function(data, strata, variable, name, output, id){
+get_n_percent <- function(data, strata, variable, name, output, id = ""){
 
 
   # Variable needs to be a factor.
