@@ -4,7 +4,7 @@
 \alias{get_median_iqr}
 \title{Title Get Median and IQR for a particular variable. By group.}
 \usage{
-get_median_iqr(data, strata, variable, name, output)
+get_median_iqr(data, strata, variable, name, output, round = 2)
 }
 \arguments{
 \item{data}{tibble containing data. Can't be a grouped tibble}
@@ -15,7 +15,7 @@ get_median_iqr(data, strata, variable, name, output)
 
 \item{name}{string name to put in the row.}
 
-\item{output}{}
+\item{round}{The number of decimal places to round to.}
 }
 \description{
 Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.s

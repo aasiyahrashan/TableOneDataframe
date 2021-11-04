@@ -7,11 +7,12 @@
 #' @param variable name of variable to be summarised
 #' @param name string name to put in the row.
 #' @param output
+#' @param round The number of decimal places to round to.
 #'
 #' @import dplyr
 #'
 #' @export
-get_median_iqr <- function(data, strata, variable, name, output) {
+get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
 
   # Strata variable needs to be a factor.
   if(!is.factor(data[[strata]])){
@@ -30,17 +31,17 @@ get_median_iqr <- function(data, strata, variable, name, output) {
 
   by_strata <- data %>%
     group_by(get(strata), .drop = FALSE) %>%
-    summarise(clean = paste0(round(median(get(variable), na.rm = TRUE), 2), " (",
-                             round(quantile(get(variable), 0.25, na.rm = TRUE), 2), " - ",
-                             round(quantile(get(variable), 0.75, na.rm = TRUE), 2), ")")) %>%
+    summarise(clean = paste0(round(median(get(variable), na.rm = TRUE), round), " (",
+                             round(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
+                             round(quantile(get(variable), 0.75, na.rm = TRUE), round), ")")) %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
   total <- data %>%
-    summarise(clean = paste0(round(median(get(variable), na.rm = TRUE), 2), " (",
-                             round(quantile(get(variable), 0.25, na.rm = TRUE), 2), " - ",
-                             round(quantile(get(variable), 0.75, na.rm = TRUE), 2), ")")) %>%
+    summarise(clean = paste0(round(median(get(variable), na.rm = TRUE), round), " (",
+                             round(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
+                             round(quantile(get(variable), 0.75, na.rm = TRUE), round), ")")) %>%
     select(clean) %>%
     t()
 
@@ -50,8 +51,8 @@ get_median_iqr <- function(data, strata, variable, name, output) {
   ## Doing a Mann whitney/K-wallis test if there is a p value column.
   if("p" %in% colnames){
     test <- data %>%
-      summarise(test = format(round(kruskal.test(get(variable) ~ get(strata))$p.value, 5),
-                               nsmall = 5, scientific = FALSE, paired = FALSE)) %>%
+      summarise(test = format(round(kruskal.test(get(variable) ~ get(strata))$p.value, 3),
+                               nsmall = 3, scientific = FALSE, paired = FALSE)) %>%
       select(test) %>%
       t()
     all <- c(all, test)
@@ -72,11 +73,12 @@ get_median_iqr <- function(data, strata, variable, name, output) {
 #' @param variable name of variable to be summarised
 #' @param name string name to put in the row.
 #' @param output
+#' @param round The number of decimal places to round results to.
 #'
 #' @import dplyr
 #'
 #' @export
-get_mean_sd <- function(data, strata, variable, name, output) {
+get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
 
 
   # Strata variable needs to be a factor.
@@ -96,15 +98,15 @@ get_mean_sd <- function(data, strata, variable, name, output) {
 
   by_strata <- data %>%
     group_by(get(strata), .drop = FALSE) %>%
-    summarise(clean = paste0(round(mean(get(variable), na.rm = TRUE), 2), " (",
-                             round(sd(get(variable), na.rm = TRUE), 2), ")")) %>%
+    summarise(clean = paste0(round(mean(get(variable), na.rm = TRUE), round), " (",
+                             round(sd(get(variable), na.rm = TRUE), round), ")")) %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
   total <- data %>%
-    summarise(clean = paste0(round(mean(get(variable), na.rm = TRUE), 2), " (",
-                             round(sd(get(variable), na.rm = TRUE), 2), ")")) %>%
+    summarise(clean = paste0(round(mean(get(variable), na.rm = TRUE), round), " (",
+                             round(sd(get(variable), na.rm = TRUE), round), ")")) %>%
     select(clean) %>%
     t()
 
@@ -114,8 +116,8 @@ get_mean_sd <- function(data, strata, variable, name, output) {
   ## Doing a oneway ANOVA test.
   if("p" %in% colnames){
     test <- data %>%
-      summarise(test = format(round(oneway.test(get(variable) ~ get(strata))$p.value, 5),
-                              nsmall = 5, scientific = FALSE, paired = FALSE)) %>%
+      summarise(test = format(round(oneway.test(get(variable) ~ get(strata))$p.value, 3),
+                              nsmall = 3, scientific = FALSE, paired = FALSE)) %>%
       select(test) %>%
       t()
     all <- c(all, test)
@@ -140,6 +142,7 @@ get_mean_sd <- function(data, strata, variable, name, output) {
 #' @param name
 #' @param output
 #' @param id Optional. Character vector containing name of variable to use when counting the denominator. Allows the sum of the numerators to be greater than 100 if there is more than one row per denominator variable.
+#' @param round The number of decimal places to round results to
 #'
 #' @import dplyr
 #' @import forcats
@@ -149,7 +152,7 @@ get_mean_sd <- function(data, strata, variable, name, output) {
 #' @export
 #'
 #' @examples
-get_n_percent <- function(data, strata, variable, name, output, id = ""){
+get_n_percent <- function(data, strata, variable, name, output, id = "", round = 2){
 
 
   # Variable needs to be a factor.
@@ -196,7 +199,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = ""){
     complete(`get(strata)`, `get(variable)`, fill = list(n=0)) %>%
     left_join(denominators, by = c("get(strata)")) %>%
     group_by(`get(strata)`) %>%
-    mutate(perc = paste0(n, " (", round(100*n/den, 2), ")")) %>%
+    mutate(perc = paste0(n, " (", round(100*n/den, round), ")")) %>%
     select( -n, -den) %>%
     pivot_wider(names_from = `get(strata)`, values_from = perc) %>%
     select(-`get(variable)`)
@@ -208,7 +211,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = ""){
     summarise(n = n()) %>%
     ungroup() %>%
     complete(`get(variable)`, fill = list(n=0)) %>%
-    mutate(perc = paste0(n, " (", round(100*n/total_den, 2), ")")) %>%
+    mutate(perc = paste0(n, " (", round(100*n/total_den, round), ")")) %>%
     select(-n)
 
   # Joining them together
@@ -221,8 +224,8 @@ get_n_percent <- function(data, strata, variable, name, output, id = ""){
   # Doing a chi-square test if necessary
   if("p" %in% colnames){
     test <- data %>%
-      summarise(test = format(round(chisq.test(get(variable), get(strata))$p.value, 5),
-                              nsmall = 5, scientific = FALSE, paired = FALSE)) %>%
+      summarise(test = format(round(chisq.test(get(variable), get(strata))$p.value, 3),
+                              nsmall = 3, scientific = FALSE, paired = FALSE)) %>%
       select(test) %>%
       t()
 
@@ -240,7 +243,6 @@ get_n_percent <- function(data, strata, variable, name, output, id = ""){
 }
 
 #' Count number of non-missing values
-#'
 #' Displays number of non-missing rows.
 #'
 #' @param data tibble containing data. Can't be a grouped tibble
@@ -304,7 +306,7 @@ get_count <- function(data, strata, variable, name, output){
 
 #' Count number of times a value is present in a variable
 #'
-#' NA values are non included in the numerator, but are included in the denominator.
+#' NA values are not included in the numerator, but are included in the denominator.
 #'
 #' @param data tibble containing data. Can't be a grouped tibble
 #' @param strata
@@ -312,6 +314,7 @@ get_count <- function(data, strata, variable, name, output){
 #' @param value Which value to count.
 #' @param name
 #' @param output
+#' @param round The number of decimal places to round results to.
 #'
 #' @import dplyr
 #' @import forcats
@@ -338,7 +341,7 @@ get_n_percent_value <- function(data, strata, variable, value, name, output){
     group_by(get(strata), .drop = FALSE) %>%
     summarise(n = sum(get(variable) == value, na.rm = TRUE),
               total = n(),
-              perc = paste0(n, " (", round(100*n/total, 2), ")")) %>%
+              perc = paste0(n, " (", round(100*n/total, round), ")")) %>%
     select(perc) %>%
     t()
 
@@ -348,7 +351,7 @@ get_n_percent_value <- function(data, strata, variable, value, name, output){
     data %>%
     summarise(n = sum(get(variable) == value, na.rm = TRUE),
               total = n(),
-              perc = paste0(n, " (", round(100*n/total, 2), ")")) %>%
+              perc = paste0(n, " (", round(100*n/total, round), ")")) %>%
     select(perc) %>%
     t()
 

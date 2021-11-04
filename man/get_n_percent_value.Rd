@@ -11,11 +11,11 @@ get_n_percent_value(data, strata, variable, value, name, output)
 
 \item{value}{Which value to count.}
 
-\item{output}{}
+\item{round}{The number of decimal places to round results to.}
 }
 \value{
 
 }
 \description{
-NA values are non included in the numerator, but are included in the denominator.
+NA values are not included in the numerator, but are included in the denominator.
 }

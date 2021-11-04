@@ -2,7 +2,8 @@
 % Please edit documentation in R/funcs.R
 \name{get_count}
 \alias{get_count}
-\title{Count number of non-missing values}
+\title{Count number of non-missing values
+Displays number of non-missing rows.}
 \usage{
 get_count(data, strata, variable, name, output)
 }
@@ -15,5 +16,6 @@ get_count(data, strata, variable, name, output)
 
 }
 \description{
+Count number of non-missing values
 Displays number of non-missing rows.
 }

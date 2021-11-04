@@ -4,7 +4,7 @@
 \alias{get_n_percent}
 \title{Get count and percentage. By group.}
 \usage{
-get_n_percent(data, strata, variable, name, output, id = "")
+get_n_percent(data, strata, variable, name, output, id = "", round = 2)
 }
 \arguments{
 \item{data}{tibble containing data. Can't be a grouped tibble}
@@ -12,6 +12,8 @@ get_n_percent(data, strata, variable, name, output, id = "")
 \item{variable}{Ideally a factor variable. If not, gets converted to factor anyway.}
 
 \item{id}{Optional. Character vector containing name of variable to use when counting the denominator. Allows the sum of the numerators to be greater than 100 if there is more than one row per denominator variable.}
+
+\item{round}{The number of decimal places to round results to}
 }
 \value{
 
