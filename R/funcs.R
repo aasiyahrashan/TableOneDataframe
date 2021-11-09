@@ -324,7 +324,7 @@ get_count <- function(data, strata, variable, name, output){
 #' @export
 #'
 #' @examples
-get_n_percent_value <- function(data, strata, variable, value, name, output){
+get_n_percent_value <- function(data, strata, variable, value, name, output, round = 2){
 
 
   # Strata needs to be a factor.

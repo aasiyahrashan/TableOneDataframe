@@ -4,7 +4,7 @@
 \alias{get_n_percent_value}
 \title{Count number of times a value is present in a variable}
 \usage{
-get_n_percent_value(data, strata, variable, value, name, output)
+get_n_percent_value(data, strata, variable, value, name, output, round = 2)
 }
 \arguments{
 \item{data}{tibble containing data. Can't be a grouped tibble}
