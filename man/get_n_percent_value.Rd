@@ -18,4 +18,5 @@ get_n_percent_value(data, strata, variable, value, name, output, round = 2)
 }
 \description{
 NA values are not included in the numerator, but are included in the denominator.
+Chi squared test. Equivalent to Z test if only 2 groups.
 }

@@ -307,6 +307,7 @@ get_count <- function(data, strata, variable, name, output){
 #' Count number of times a value is present in a variable
 #'
 #' NA values are not included in the numerator, but are included in the denominator.
+#' Chi squared test. Equivalent to Z test if only 2 groups.
 #'
 #' @param data tibble containing data. Can't be a grouped tibble
 #' @param strata
@@ -360,10 +361,14 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
 
   ## No test.
   if("p" %in% colnames){
+
+    # Need to create summary table for prop.test.
     test <- data %>%
-      summarise(test = "") %>%
+      summarise(test = format(round(chisq.test(get(variable), get(strata))$p.value, 3),
+                              nsmall = 3, scientific = FALSE, paired = FALSE)) %>%
       select(test) %>%
       t()
+
     all <- c(all, test)
   }
 
