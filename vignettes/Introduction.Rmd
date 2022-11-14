@@ -54,6 +54,5 @@ output <- get_n_percent(mtcars, 'cyl', 'gear', "Gear", output)
 output <- get_n_percent(mtcars, 'cyl', 'carb', "Carb", output)
 
 # Output is just a dataframe, so can be used with kable, or written to excel/csv.
-output %>% 
-  kable()
+kable(output)
 ```
