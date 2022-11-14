@@ -15,6 +15,8 @@ get_mean_sd(data, strata, variable, name, output, round = 2)
 
 \item{name}{string name to put in the row.}
 
+\item{output}{The dataframe to append the requested summary to}
+
 \item{round}{The number of decimal places to round results to.}
 }
 \description{

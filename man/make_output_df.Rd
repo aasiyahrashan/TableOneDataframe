@@ -7,12 +7,11 @@
 make_output_df(data, strata, include_tests = FALSE)
 }
 \arguments{
+\item{data}{tibble containing data. Can't be a grouped tibble}
+
 \item{strata}{A factor variable to stratify by.}
 
 \item{include_tests}{Should it create a space for p-values?}
-}
-\value{
-
 }
 \description{
 Includes neat column names with counts of observations in each group.

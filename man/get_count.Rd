@@ -10,10 +10,13 @@ get_count(data, strata, variable, name, output)
 \arguments{
 \item{data}{tibble containing data. Can't be a grouped tibble}
 
-\item{output}{}
-}
-\value{
+\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work.}
 
+\item{variable}{Ideally a factor variable. If not, gets converted to factor anyway.}
+
+\item{name}{string name to put into the row}
+
+\item{output}{The dataframe to append the requested summary to}
 }
 \description{
 Count number of non-missing values
