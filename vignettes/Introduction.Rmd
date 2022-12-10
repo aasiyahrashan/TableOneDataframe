@@ -13,6 +13,13 @@ knitr::opts_chunk$set(
 )
 ```
 
+This packages builds a 'Table One' for a medical journal. It adds summaries of each variable based on user specifications, and outputs the result as a dataframe which can be written to excel/a csv file/embedded into a markdown document. 
+
+It take a 'strata' variable which is an ordered factor. The table is divided into a 'Total' column + one column for each level of the factor. 
+The `make_output_df()` function creates an empty dataframe with the counts of each observation included in the column headings. 
+
+The `get_()` functions add rows to that dataframe. 
+
 ```{r setup}
 library(TableOneDataframe)
 library(knitr)

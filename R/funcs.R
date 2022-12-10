@@ -1,6 +1,6 @@
-#' Title Get Median and IQR for a particular variable. By group.
+#' Title Get Median and IQR for a particular variable.
 #'
-#' Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.s
+#' Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.
 #'
 #' @param data tibble containing data. Can't be a grouped tibble
 #' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
