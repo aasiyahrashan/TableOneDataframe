@@ -284,9 +284,7 @@ get_count <- function(data, strata, variable, name, output){
   ## No test.
   if("p" %in% colnames){
     test <- data %>%
-      summarise(test = "") %>%
-      select(test) %>%
-      t()
+      summarise(test = "") %>% select(test) %>%  t()
     all <- c(all, test)
   }
 
@@ -374,8 +372,6 @@ get_unique_count <- function(data, strata, variable, name, output){
 #' @import tidyr
 #' @export
 get_n_percent_value <- function(data, strata, variable, value, name, output, round = 2){
-
-
   # Strata needs to be a factor.
   if(!is.factor(data[[strata]])){
     stop("Strata variable needs to be a factor")
