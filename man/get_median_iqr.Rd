@@ -2,7 +2,7 @@
 % Please edit documentation in R/funcs.R
 \name{get_median_iqr}
 \alias{get_median_iqr}
-\title{Title Get Median and IQR for a particular variable. By group.}
+\title{Title Get Median and IQR for a particular variable.}
 \usage{
 get_median_iqr(data, strata, variable, name, output, round = 2)
 }
@@ -20,5 +20,5 @@ get_median_iqr(data, strata, variable, name, output, round = 2)
 \item{round}{The number of decimal places to round to.}
 }
 \description{
-Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.s
+Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.
 }
