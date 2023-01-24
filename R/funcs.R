@@ -13,13 +13,12 @@
 #'
 #' @export
 get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
-
   # Strata variable needs to be a factor.
-  if(!is.factor(data[[strata]])){
+  if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
   }
   # Variable needs to be numeric
-  if(!is.numeric(data[[variable]])){
+  if (!is.numeric(data[[variable]])) {
     stop("Variable needs to be numeric")
   }
 
@@ -31,17 +30,21 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
 
   by_strata <- data %>%
     group_by(get(strata), .drop = FALSE) %>%
-    summarise(clean = paste0(round(median(get(variable), na.rm = TRUE), round), " (",
-                             round(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
-                             round(quantile(get(variable), 0.75, na.rm = TRUE), round), ")")) %>%
+    summarise(clean = paste0(
+      round(median(get(variable), na.rm = TRUE), round), " (",
+      round(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
+      round(quantile(get(variable), 0.75, na.rm = TRUE), round), ")"
+    )) %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
   total <- data %>%
-    summarise(clean = paste0(round(median(get(variable), na.rm = TRUE), round), " (",
-                             round(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
-                             round(quantile(get(variable), 0.75, na.rm = TRUE), round), ")")) %>%
+    summarise(clean = paste0(
+      round(median(get(variable), na.rm = TRUE), round), " (",
+      round(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
+      round(quantile(get(variable), 0.75, na.rm = TRUE), round), ")"
+    )) %>%
     select(clean) %>%
     t()
 
@@ -49,10 +52,11 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
   all <- c(paste0(name, " Median (IQR)"), total, by_strata)
 
   ## Doing a Mann whitney/K-wallis test if there is a p value column.
-  if("p" %in% colnames){
+  if ("p" %in% colnames) {
     test <- data %>%
       summarise(test = format(round(kruskal.test(get(variable) ~ get(strata))$p.value, 3),
-                               nsmall = 3, scientific = FALSE, paired = FALSE)) %>%
+        nsmall = 3, scientific = FALSE, paired = FALSE
+      )) %>%
       select(test) %>%
       t()
     all <- c(all, test)
@@ -79,14 +83,12 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
 #'
 #' @export
 get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
-
-
   # Strata variable needs to be a factor.
-  if(!is.factor(data[[strata]])){
+  if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
   }
   # Variable needs to be numeric
-  if(!is.numeric(data[[variable]])){
+  if (!is.numeric(data[[variable]])) {
     stop("Variable needs to be numeric")
   }
 
@@ -98,15 +100,19 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
 
   by_strata <- data %>%
     group_by(get(strata), .drop = FALSE) %>%
-    summarise(clean = paste0(round(mean(get(variable), na.rm = TRUE), round), " (",
-                             round(sd(get(variable), na.rm = TRUE), round), ")")) %>%
+    summarise(clean = paste0(
+      round(mean(get(variable), na.rm = TRUE), round), " (",
+      round(sd(get(variable), na.rm = TRUE), round), ")"
+    )) %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
   total <- data %>%
-    summarise(clean = paste0(round(mean(get(variable), na.rm = TRUE), round), " (",
-                             round(sd(get(variable), na.rm = TRUE), round), ")")) %>%
+    summarise(clean = paste0(
+      round(mean(get(variable), na.rm = TRUE), round), " (",
+      round(sd(get(variable), na.rm = TRUE), round), ")"
+    )) %>%
     select(clean) %>%
     t()
 
@@ -114,10 +120,11 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
   all <- c(paste0(name, " Mean (SD)"), total, by_strata)
 
   ## Doing a oneway ANOVA test.
-  if("p" %in% colnames){
+  if ("p" %in% colnames) {
     test <- data %>%
       summarise(test = format(round(oneway.test(get(variable) ~ get(strata))$p.value, 3),
-                              nsmall = 3, scientific = FALSE, paired = FALSE)) %>%
+        nsmall = 3, scientific = FALSE, paired = FALSE
+      )) %>%
       select(test) %>%
       t()
     all <- c(all, test)
@@ -150,11 +157,9 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
 #' @import tidyr
 #' @export
 get_n_percent <- function(data, strata, variable, name, output, id = "", round = 2,
-                          sort_by_freq = FALSE){
-
-
+                          sort_by_freq = FALSE) {
   # Variable needs to be a factor.
-  if(!is.factor(data[[strata]])){
+  if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
   }
 
@@ -162,7 +167,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
   colnames <- colnames(output)
 
   # Converting the variable to a factor if it isn't already.
-  if(!is.factor(data[[variable]])){
+  if (!is.factor(data[[variable]])) {
     data[[variable]] <- factor(data[[variable]])
   }
 
@@ -175,7 +180,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
 
   # Working out what the denominator should be. If ID is specified,
   # everthing gets counted once per ID. If not, once per row.
-  if(id != ""){
+  if (id != "") {
     denominators <- data %>%
       distinct(across(c(id, strata))) %>%
       group_by(get(strata)) %>%
@@ -194,11 +199,11 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
     group_by(get(strata), get(variable), .drop = FALSE) %>%
     summarise(n = n()) %>%
     ungroup() %>%
-    complete(`get(strata)`, `get(variable)`, fill = list(n=0)) %>%
+    complete(`get(strata)`, `get(variable)`, fill = list(n = 0)) %>%
     left_join(denominators, by = c("get(strata)")) %>%
     group_by(`get(strata)`) %>%
-    mutate(perc = paste0(n, " (", round(100*n/den, round), ")")) %>%
-    select( -n, -den) %>%
+    mutate(perc = paste0(n, " (", round(100 * n / den, round), ")")) %>%
+    select(-n, -den) %>%
     pivot_wider(names_from = `get(strata)`, values_from = perc) %>%
     select(-`get(variable)`)
 
@@ -208,19 +213,18 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
     group_by(get(variable), .drop = FALSE) %>%
     summarise(n = n()) %>%
     ungroup() %>%
-    complete(`get(variable)`, fill = list(n=0)) %>%
-    mutate(perc = paste0(n, " (", round(100*n/total_den, round), ")"))
+    complete(`get(variable)`, fill = list(n = 0)) %>%
+    mutate(perc = paste0(n, " (", round(100 * n / total_den, round), ")"))
 
   # Joining them together
   all <- cbind(total, by_strata) %>%
     mutate(`get(variable)` = as.character(`get(variable)`))
 
   # Sorting by total frequency instead of default factor ordering if required.
-  if(sort_by_freq){
+  if (sort_by_freq) {
     all <- all %>%
       arrange(desc(n)) %>%
       select(-n)
-
   } else {
     all <- all %>%
       select(-n)
@@ -230,17 +234,18 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
   top_row <- c(paste0(name, " N(%)"), rep("", length(output) - 1))
 
   # Doing a chi-square test if necessary
-  if("p" %in% colnames){
+  if ("p" %in% colnames) {
     test <- data %>%
       summarise(test = format(round(chisq.test(get(variable), get(strata))$p.value, 3),
-                              nsmall = 3, scientific = FALSE, paired = FALSE)) %>%
+        nsmall = 3, scientific = FALSE, paired = FALSE
+      )) %>%
       select(test) %>%
       t()
 
     # Overwriting the top row with the p value.
     top_row <- c(paste0(name, " N(%)"), rep("", length(output) - 2), test)
     # Also, the 'all' df needs an extra col for the p value
-    all['p'] <- ""
+    all["p"] <- ""
   }
 
   all <- rbind(top_row, all)
@@ -263,11 +268,9 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
 #' @import forcats
 #' @import tidyr
 #' @export
-get_count <- function(data, strata, variable, name, output){
-
-
+get_count <- function(data, strata, variable, name, output) {
   # Strata needs to be a factor.
-  if(!is.factor(data[[strata]])){
+  if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
   }
 
@@ -294,9 +297,11 @@ get_count <- function(data, strata, variable, name, output){
   all <- c(paste0(name, " N"), total, by_strata)
 
   ## No test.
-  if("p" %in% colnames){
+  if ("p" %in% colnames) {
     test <- data %>%
-      summarise(test = "") %>% select(test) %>%  t()
+      summarise(test = "") %>%
+      select(test) %>%
+      t()
     all <- c(all, test)
   }
 
@@ -319,11 +324,9 @@ get_count <- function(data, strata, variable, name, output){
 #' @import forcats
 #' @import tidyr
 #' @export
-get_unique_count <- function(data, strata, variable, name, output){
-
-
+get_unique_count <- function(data, strata, variable, name, output) {
   # Strata needs to be a factor.
-  if(!is.factor(data[[strata]])){
+  if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
   }
 
@@ -352,7 +355,7 @@ get_unique_count <- function(data, strata, variable, name, output){
   all <- c(paste0(name, " N"), total, by_strata)
 
   ## No test.
-  if("p" %in% colnames){
+  if ("p" %in% colnames) {
     test <- data %>%
       summarise(test = "") %>%
       select(test) %>%
@@ -383,9 +386,9 @@ get_unique_count <- function(data, strata, variable, name, output){
 #' @import forcats
 #' @import tidyr
 #' @export
-get_n_percent_value <- function(data, strata, variable, value, name, output, round = 2){
+get_n_percent_value <- function(data, strata, variable, value, name, output, round = 2) {
   # Strata needs to be a factor.
-  if(!is.factor(data[[strata]])){
+  if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
   }
 
@@ -396,9 +399,11 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
   by_strata <-
     data %>%
     group_by(get(strata), .drop = FALSE) %>%
-    summarise(n = sum(get(variable) == value, na.rm = TRUE),
-              total = n(),
-              perc = paste0(n, " (", round(100*n/total, round), ")")) %>%
+    summarise(
+      n = sum(get(variable) == value, na.rm = TRUE),
+      total = n(),
+      perc = paste0(n, " (", round(100 * n / total, round), ")")
+    ) %>%
     select(perc) %>%
     t()
 
@@ -406,9 +411,11 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
   # Now the total.
   total <-
     data %>%
-    summarise(n = sum(get(variable) == value, na.rm = TRUE),
-              total = n(),
-              perc = paste0(n, " (", round(100*n/total, round), ")")) %>%
+    summarise(
+      n = sum(get(variable) == value, na.rm = TRUE),
+      total = n(),
+      perc = paste0(n, " (", round(100 * n / total, round), ")")
+    ) %>%
     select(perc) %>%
     t()
 
@@ -416,12 +423,12 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
   all <- c(paste0(name, " N(%)"), total, by_strata)
 
   ## No test.
-  if("p" %in% colnames){
-
+  if ("p" %in% colnames) {
     # Need to create summary table for prop.test.
     test <- data %>%
       summarise(test = format(round(chisq.test(get(variable), get(strata))$p.value, 3),
-                              nsmall = 3, scientific = FALSE, paired = FALSE)) %>%
+        nsmall = 3, scientific = FALSE, paired = FALSE
+      )) %>%
       select(test) %>%
       t()
 
@@ -441,27 +448,25 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
 #' @param include_tests Should it create a space for p-values?
 #' @import dplyr
 #' @export
-make_output_df <- function(data, strata, include_tests = FALSE){
-
+make_output_df <- function(data, strata, include_tests = FALSE) {
   # Variable needs to be a factor.
-  if(!is.factor(data[[strata]])){
+  if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
   }
 
   # Getting levels counts
   levels <- levels(data[[strata]])
   strata_names <- data %>%
-    group_by(get(strata), .drop=FALSE) %>%
+    group_by(get(strata), .drop = FALSE) %>%
     summarise(n = n()) %>%
     mutate(names = paste0(`get(strata)`, " (N=", n, ")"))
 
   total_name <- paste0("Total", " (N=", nrow(data), ")")
 
-  if(include_tests){
+  if (include_tests) {
     output <- data.frame(matrix(ncol = 3 + length(levels), nrow = 0))
     colnames(output) <- c("Variable", total_name, strata_names$names, "p")
-  }
-  else{
+  } else {
     output <- data.frame(matrix(ncol = 2 + length(levels), nrow = 0))
     colnames(output) <- c("Variable", total_name, strata_names$names)
   }
