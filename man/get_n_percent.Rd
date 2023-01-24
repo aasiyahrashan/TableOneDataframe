@@ -4,7 +4,16 @@
 \alias{get_n_percent}
 \title{Get count and percentage. By group.}
 \usage{
-get_n_percent(data, strata, variable, name, output, id = "", round = 2)
+get_n_percent(
+  data,
+  strata,
+  variable,
+  name,
+  output,
+  id = "",
+  round = 2,
+  sort_by_freq = FALSE
+)
 }
 \arguments{
 \item{data}{tibble containing data. Can't be a grouped tibble}
@@ -20,6 +29,8 @@ get_n_percent(data, strata, variable, name, output, id = "", round = 2)
 \item{id}{Optional. Character vector containing name of variable to use when counting the denominator. Allows the sum of the numerators to be greater than 100 if there is more than one row per denominator variable.}
 
 \item{round}{The number of decimal places to round results to}
+
+\item{sort_by_freq}{TRUE/FALSE for whether to overwrite factor ordering and sort in descending order of total frequency.}
 }
 \description{
 Gets count and percentage for factor variables by group.

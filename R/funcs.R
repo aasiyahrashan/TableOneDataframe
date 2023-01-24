@@ -143,12 +143,14 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
 #' @param output The dataframe to append the requested summary to
 #' @param id Optional. Character vector containing name of variable to use when counting the denominator. Allows the sum of the numerators to be greater than 100 if there is more than one row per denominator variable.
 #' @param round The number of decimal places to round results to
+#' @param sort_by_freq TRUE/FALSE for whether to overwrite factor ordering and sort in descending order of total frequency.
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
-get_n_percent <- function(data, strata, variable, name, output, id = "", round = 2){
+get_n_percent <- function(data, strata, variable, name, output, id = "", round = 2,
+                          sort_by_freq = FALSE){
 
 
   # Variable needs to be a factor.
@@ -207,12 +209,22 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
     summarise(n = n()) %>%
     ungroup() %>%
     complete(`get(variable)`, fill = list(n=0)) %>%
-    mutate(perc = paste0(n, " (", round(100*n/total_den, round), ")")) %>%
-    select(-n)
+    mutate(perc = paste0(n, " (", round(100*n/total_den, round), ")"))
 
   # Joining them together
   all <- cbind(total, by_strata) %>%
     mutate(`get(variable)` = as.character(`get(variable)`))
+
+  # Sorting by total frequency instead of default factor ordering if required.
+  if(sort_by_freq){
+    all <- all %>%
+      arrange(desc(n)) %>%
+      select(-n)
+
+  } else {
+    all <- all %>%
+      select(-n)
+  }
 
   # Top row contains the variable name
   top_row <- c(paste0(name, " N(%)"), rep("", length(output) - 1))
