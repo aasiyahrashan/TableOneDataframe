@@ -7,7 +7,7 @@
 make_output_df(data, strata, include_tests = FALSE)
 }
 \arguments{
-\item{data}{tibble containing data. Can't be a grouped tibble}
+\item{data}{tibble containing data. Can't be a grouped tibble. Also, can't have a variable named 'variable'.}
 
 \item{strata}{A factor variable to stratify by.}
 

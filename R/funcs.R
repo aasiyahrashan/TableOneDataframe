@@ -443,7 +443,7 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
 #' Make output dataframe
 #'
 #' Includes neat column names with counts of observations in each group.
-#' @param data tibble containing data. Can't be a grouped tibble
+#' @param data tibble containing data. Can't be a grouped tibble. Also, can't have a variable named 'variable'.
 #' @param strata A factor variable to stratify by.
 #' @param include_tests Should it create a space for p-values?
 #' @import dplyr
@@ -452,6 +452,11 @@ make_output_df <- function(data, strata, include_tests = FALSE) {
   # Variable needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
+  }
+
+  # Can't allow variables with the same name as the argument of subsequent functions.
+  if ("variable" %in% colnames(data) | "Variable" %in% colnames(data)) {
+    stop("There is a variable in the dataframe named 'variable'. Please rename it and try again.")
   }
 
   # Getting levels counts
