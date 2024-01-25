@@ -63,6 +63,12 @@ output <- get_n_percent(mtcars, 'cyl', 'carb', "Carb", output)
 # Can also sort by frequency instead of factor/alphabetical ordering.
 output <- get_n_percent(mtcars, 'cyl', 'carb', "Carb", output, sort_by_freq = TRUE)
 
+# Get availability of both numeric and non-numeric variables.
+output <- get_availability(mtcars, 'cyl', 'gear', "Gear", output)
+# Adding NA to demonstrate
+mtcars[12:16, 'wt'] <- NA
+output <- get_availability(mtcars, 'cyl', 'wt', "wt", output)
+
 # Output is just a dataframe, so can be used with kable, or written to excel/csv.
 kable(output)
 ```

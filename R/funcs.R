@@ -477,3 +477,67 @@ make_output_df <- function(data, strata, include_tests = FALSE) {
   }
   output
 }
+
+#' Get N(%) availability - the number of times the variable is not NA
+#'
+#' @param data tibble containing data. Can't be a grouped tibble
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param variable Variable to check availability for. Can be numeric, string, factor.
+#' @param name string name to put into the row
+#' @param output The dataframe to append the requested summary to
+#' @param round The number of decimal places to round results to.
+#'
+#' @import dplyr
+#' @import forcats
+#' @import tidyr
+#' @export
+get_availability <- function(data, strata, variable, name, output, round = 2) {
+  # Strata needs to be a factor.
+  if (!is.factor(data[[strata]])) {
+    stop("Strata variable needs to be a factor")
+  }
+
+  # Saving the column names for later.
+  colnames <- colnames(output)
+
+  # Doing it for the strata.
+  by_strata <-
+    data %>%
+    group_by(get(strata), .drop = FALSE) %>%
+    summarise(
+      n = sum(!is.na(get(variable)), na.rm = TRUE),
+      total = n(),
+      perc = paste0(n, " (", round(100 * n / total, round), ")")
+    ) %>%
+    select(perc) %>%
+    t()
+
+
+  # Now the total.
+  total <-
+    data %>%
+    summarise(
+      n = sum(!is.na(get(variable)), na.rm = TRUE),
+      total = n(),
+      perc = paste0(n, " (", round(100 * n / total, round), ")")
+    ) %>%
+    select(perc) %>%
+    t()
+
+  # Filling the first variable in with the row label.
+  all <- c(paste0(name, " availability N(%)"), total, by_strata)
+
+  ## No test.
+  if ("p" %in% colnames) {
+    test <- data %>%
+      summarise(test = "") %>%
+      select(test) %>%
+      t()
+    all <- c(all, test)
+  }
+
+  # Renaming the variables to let the 2 data frames stack on top of each other.
+  output <- rbind(output, all, stringsAsFactors = FALSE)
+  colnames(output) <- colnames
+  output
+}
