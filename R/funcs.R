@@ -255,6 +255,67 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
   output
 }
 
+
+#' Get sum of a numeric variable.
+#' Treats missing values as zero.
+#'
+#' @param data tibble containing data. Can't be a grouped tibble
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param variable Numeric variable to get sum for
+#' @param name string name to put into the row
+#' @param output The dataframe to append the requested summary to
+#'
+#' @import dplyr
+#' @import forcats
+#' @import tidyr
+#' @export
+get_sum <- function(data, strata, variable, name, output,
+                          round = 2) {
+  # Strata variable needs to be a factor.
+  if (!is.factor(data[[strata]])) {
+    stop("Strata variable needs to be a factor")
+  }
+  # Variable needs to be numeric
+  if (!is.numeric(data[[variable]])) {
+    stop("Variable needs to be numeric")
+  }
+
+  # Saving the column names for later.
+  colnames <- colnames(output)
+
+  # I get the sum for whichever variable, paste them together as characters,
+  # and save it all in the output dataframe
+
+  by_strata <- data %>%
+    group_by(get(strata), .drop = FALSE) %>%
+    summarise(clean = round((sum(get(variable), na.rm = TRUE)), round)) %>%
+    select(clean) %>%
+    t()
+
+  # Now, getting the total to put at the beginning.
+  total <- data %>%
+    summarise(clean = round((sum(get(variable), na.rm = TRUE)), round)) %>%
+    select(clean) %>%
+    t()
+
+  # Filling the first variable in with the row label.
+  all <- c(paste0(name, " sum"), total, by_strata)
+
+  ## No test.
+  if ("p" %in% colnames) {
+    test <- data %>%
+      summarise(test = "") %>%
+      select(test) %>%
+      t()
+    all <- c(all, test)
+  }
+
+  # Renaming the variables to let the 2 data frames stack on top of each other.
+  output <- rbind(output, all, stringsAsFactors = FALSE)
+  colnames(output) <- colnames
+  output
+}
+
 #' Count number of non-missing values
 #' Displays number of non-missing rows.
 #'

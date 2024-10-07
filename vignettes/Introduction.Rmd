@@ -49,6 +49,8 @@ output <- get_count(mtcars, 'cyl', 'wt', "WT", output)
 output <- get_unique_count(mtcars, 'cyl', 'gear', "Gears", output)
 # Count specific value
 output <- get_n_percent_value(mtcars, 'cyl', 'vs', 1, "VS = 1", output)
+# Sum a numeric variable
+output <- get_sum(mtcars, 'cyl', 'disp', "Display", output)
 
 # N %
 # Adding a random NA to demonstrate. 
