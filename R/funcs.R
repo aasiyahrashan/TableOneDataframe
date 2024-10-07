@@ -270,7 +270,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
 #' @import tidyr
 #' @export
 get_sum <- function(data, strata, variable, name, output,
-                          round = 2) {
+                    round = 2) {
   # Strata variable needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
