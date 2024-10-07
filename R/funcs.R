@@ -172,7 +172,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
   }
 
   # replacing NAs with missing, and putting it last.
-  data[[variable]] <- fct_explicit_na(data[[variable]], na_level = "Missing")
+  data[[variable]] <- fct_na_value_to_level(data[[variable]], level = "Missing")
 
   # Also replacing empty strings with the word 'Missing' and putting that last.
   data[[variable]] <- suppressWarnings(fct_recode(data[[variable]], Missing = ""))
