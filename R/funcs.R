@@ -15,9 +15,9 @@
 get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
   # Data can't be grouped already
   if (is_grouped_df(data)) {
-  stop("The `data` provided is grouped. This is cause issues with later functions.
+    stop("The `data` provided is grouped. This is cause issues with later functions.
        Fix this by running `data <- ungroup(data)`")
-    }
+  }
   # Strata variable needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
