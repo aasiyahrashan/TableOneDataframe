@@ -13,6 +13,11 @@
 #'
 #' @export
 get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
+  # Data can't be grouped already
+  if (is_grouped_df(data)) {
+  stop("The `data` provided is grouped. This is cause issues with later functions.
+       Fix this by running `data <- ungroup(data)`")
+    }
   # Strata variable needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
@@ -83,6 +88,11 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
 #'
 #' @export
 get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
+  # Data can't be grouped already
+  if (is_grouped_df(data)) {
+    stop("The `data` provided is grouped. This is cause issues with later functions.
+       Fix this by running `data <- ungroup(data)`")
+  }
   # Strata variable needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
@@ -158,6 +168,11 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
 #' @export
 get_n_percent <- function(data, strata, variable, name, output, id = "", round = 2,
                           sort_by_freq = FALSE) {
+  # Data can't be grouped already
+  if (is_grouped_df(data)) {
+    stop("The `data` provided is grouped. This is cause issues with later functions.
+       Fix this by running `data <- ungroup(data)`")
+  }
   # Variable needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
@@ -271,6 +286,11 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
 #' @export
 get_sum <- function(data, strata, variable, name, output,
                     round = 2) {
+  # Data can't be grouped already
+  if (is_grouped_df(data)) {
+    stop("The `data` provided is grouped. This is cause issues with later functions.
+       Fix this by running `data <- ungroup(data)`")
+  }
   # Strata variable needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
@@ -330,6 +350,11 @@ get_sum <- function(data, strata, variable, name, output,
 #' @import tidyr
 #' @export
 get_count <- function(data, strata, variable, name, output) {
+  # Data can't be grouped already
+  if (is_grouped_df(data)) {
+    stop("The `data` provided is grouped. This is cause issues with later functions.
+       Fix this by running `data <- ungroup(data)`")
+  }
   # Strata needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
@@ -386,6 +411,11 @@ get_count <- function(data, strata, variable, name, output) {
 #' @import tidyr
 #' @export
 get_unique_count <- function(data, strata, variable, name, output) {
+  # Data can't be grouped already
+  if (is_grouped_df(data)) {
+    stop("The `data` provided is grouped. This is cause issues with later functions.
+       Fix this by running `data <- ungroup(data)`")
+  }
   # Strata needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
@@ -448,6 +478,11 @@ get_unique_count <- function(data, strata, variable, name, output) {
 #' @import tidyr
 #' @export
 get_n_percent_value <- function(data, strata, variable, value, name, output, round = 2) {
+  # Data can't be grouped already
+  if (is_grouped_df(data)) {
+    stop("The `data` provided is grouped. This is cause issues with later functions.
+       Fix this by running `data <- ungroup(data)`")
+  }
   # Strata needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
@@ -510,6 +545,11 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
 #' @import dplyr
 #' @export
 make_output_df <- function(data, strata, include_tests = FALSE) {
+  # Data can't be grouped already
+  if (is_grouped_df(data)) {
+    stop("The `data` provided is grouped. This is cause issues with later functions.
+       Fix this by running `data <- ungroup(data)`")
+  }
   # Variable needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
@@ -553,6 +593,11 @@ make_output_df <- function(data, strata, include_tests = FALSE) {
 #' @import tidyr
 #' @export
 get_availability <- function(data, strata, variable, name, output, round = 2) {
+  # Data can't be grouped already
+  if (is_grouped_df(data)) {
+    stop("The `data` provided is grouped. This is cause issues with later functions.
+       Fix this by running `data <- ungroup(data)`")
+  }
   # Strata needs to be a factor.
   if (!is.factor(data[[strata]])) {
     stop("Strata variable needs to be a factor")
