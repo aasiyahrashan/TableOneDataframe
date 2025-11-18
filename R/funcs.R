@@ -1,3 +1,28 @@
+format_num <- function(x, dp) {
+  # 1. Round the number 'x' to the desired number of decimal places 'dp'.
+  x_rounded <- round(x, dp)
+
+  # 2. Format the rounded number as a character string.
+  #    'nsmall = dp' forces the display of 'dp' number of zeros,
+  #    e.g., 5 becomes "5.00" if dp=2.
+  #    'trim = TRUE' removes any leading/trailing white space added by format().
+  formatted_x <- format(x_rounded, nsmall = dp, trim = TRUE)
+
+  return(formatted_x)
+}
+
+format_pvalue <- function(p_value) {
+  # 1. Check for the < 0.001 threshold
+  if (p_value < 0.001) {
+    return("<0.001")
+  } else {
+    # 2. Use the format logic for padding (always 3 dps for p-values)
+    # Note: We hardcode '3' instead of using the 'round' argument here
+    # because p-values are conventionally reported to 3 dps.
+    return(format(round(p_value, 3), nsmall = 3, trim = TRUE))
+  }
+}
+
 #' Title Get Median and IQR for a particular variable.
 #'
 #' Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.
@@ -36,9 +61,9 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
   by_strata <- data %>%
     group_by(get(strata), .drop = FALSE) %>%
     summarise(clean = paste0(
-      round(median(get(variable), na.rm = TRUE), round), " (",
-      round(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
-      round(quantile(get(variable), 0.75, na.rm = TRUE), round), ")"
+      format_num(median(get(variable), na.rm = TRUE), round), " (",
+      format_num(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
+      format_num(quantile(get(variable), 0.75, na.rm = TRUE), round), ")"
     )) %>%
     select(clean) %>%
     t()
@@ -46,9 +71,9 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
   # Now, getting the total to put at the beginning.
   total <- data %>%
     summarise(clean = paste0(
-      round(median(get(variable), na.rm = TRUE), round), " (",
-      round(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
-      round(quantile(get(variable), 0.75, na.rm = TRUE), round), ")"
+      format_num(median(get(variable), na.rm = TRUE), round), " (",
+      format_num(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
+      format_num(quantile(get(variable), 0.75, na.rm = TRUE), round), ")"
     )) %>%
     select(clean) %>%
     t()
@@ -59,9 +84,7 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
   ## Doing a Mann whitney/K-wallis test if there is a p value column.
   if ("p" %in% colnames) {
     test <- data %>%
-      summarise(test = format(round(kruskal.test(get(variable) ~ get(strata))$p.value, 3),
-        nsmall = 3, scientific = FALSE, paired = FALSE
-      )) %>%
+      summarise(test = format_pvalue(kruskal.test(get(variable) ~ get(strata))$p.value)) %>%
       select(test) %>%
       t()
     all <- c(all, test)
@@ -111,8 +134,8 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
   by_strata <- data %>%
     group_by(get(strata), .drop = FALSE) %>%
     summarise(clean = paste0(
-      round(mean(get(variable), na.rm = TRUE), round), " (",
-      round(sd(get(variable), na.rm = TRUE), round), ")"
+      format_num(mean(get(variable), na.rm = TRUE), round), " (",
+      format_num(sd(get(variable), na.rm = TRUE), round), ")"
     )) %>%
     select(clean) %>%
     t()
@@ -120,8 +143,8 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
   # Now, getting the total to put at the beginning.
   total <- data %>%
     summarise(clean = paste0(
-      round(mean(get(variable), na.rm = TRUE), round), " (",
-      round(sd(get(variable), na.rm = TRUE), round), ")"
+      format_num(mean(get(variable), na.rm = TRUE), round), " (",
+      format_num(sd(get(variable), na.rm = TRUE), round), ")"
     )) %>%
     select(clean) %>%
     t()
@@ -132,9 +155,7 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
   ## Doing a oneway ANOVA test.
   if ("p" %in% colnames) {
     test <- data %>%
-      summarise(test = format(round(oneway.test(get(variable) ~ get(strata))$p.value, 3),
-        nsmall = 3, scientific = FALSE, paired = FALSE
-      )) %>%
+      summarise(test = format_pvalue(oneway.test(get(variable) ~ get(strata))$p.value)) %>%
       select(test) %>%
       t()
     all <- c(all, test)
@@ -217,7 +238,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
     complete(`get(strata)`, `get(variable)`, fill = list(n = 0)) %>%
     left_join(denominators, by = c("get(strata)")) %>%
     group_by(`get(strata)`) %>%
-    mutate(perc = paste0(n, " (", round(100 * n / den, round), ")")) %>%
+    mutate(perc = paste0(n, " (", format_num(100 * n / den, round), ")")) %>%
     select(-n, -den) %>%
     pivot_wider(names_from = `get(strata)`, values_from = perc) %>%
     select(-`get(variable)`)
@@ -229,7 +250,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
     summarise(n = n()) %>%
     ungroup() %>%
     complete(`get(variable)`, fill = list(n = 0)) %>%
-    mutate(perc = paste0(n, " (", round(100 * n / total_den, round), ")"))
+    mutate(perc = paste0(n, " (", format_num(100 * n / total_den, round), ")"))
 
   # Joining them together
   all <- cbind(total, by_strata) %>%
@@ -251,9 +272,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
   # Doing a chi-square test if necessary
   if ("p" %in% colnames) {
     test <- data %>%
-      summarise(test = format(round(chisq.test(get(variable), get(strata))$p.value, 3),
-        nsmall = 3, scientific = FALSE, paired = FALSE
-      )) %>%
+      summarise(test = format_pvalue(chisq.test(get(variable), get(strata))$p.value)) %>%
       select(test) %>%
       t()
 
@@ -308,13 +327,13 @@ get_sum <- function(data, strata, variable, name, output,
 
   by_strata <- data %>%
     group_by(get(strata), .drop = FALSE) %>%
-    summarise(clean = round((sum(get(variable), na.rm = TRUE)), round)) %>%
+    summarise(clean = format_num((sum(get(variable), na.rm = TRUE)), round)) %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
   total <- data %>%
-    summarise(clean = round((sum(get(variable), na.rm = TRUE)), round)) %>%
+    summarise(clean = format_num((sum(get(variable), na.rm = TRUE)), round)) %>%
     select(clean) %>%
     t()
 
@@ -498,7 +517,7 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
     summarise(
       n = sum(get(variable) == value, na.rm = TRUE),
       total = n(),
-      perc = paste0(n, " (", round(100 * n / total, round), ")")
+      perc = paste0(n, " (", format_num(100 * n / total, round), ")")
     ) %>%
     select(perc) %>%
     t()
@@ -510,7 +529,7 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
     summarise(
       n = sum(get(variable) == value, na.rm = TRUE),
       total = n(),
-      perc = paste0(n, " (", round(100 * n / total, round), ")")
+      perc = paste0(n, " (", format_num(100 * n / total, round), ")")
     ) %>%
     select(perc) %>%
     t()
@@ -522,9 +541,7 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
   if ("p" %in% colnames) {
     # Need to create summary table for prop.test.
     test <- data %>%
-      summarise(test = format(round(chisq.test(get(variable), get(strata))$p.value, 3),
-        nsmall = 3, scientific = FALSE, paired = FALSE
-      )) %>%
+      summarise(test = format_pvalue(chisq.test(get(variable), get(strata))$p.value)) %>%
       select(test) %>%
       t()
 
@@ -613,7 +630,7 @@ get_availability <- function(data, strata, variable, name, output, round = 2) {
     summarise(
       n = sum(!is.na(get(variable)), na.rm = TRUE),
       total = n(),
-      perc = paste0(n, " (", round(100 * n / total, round), ")")
+      perc = paste0(n, " (", format_num(100 * n / total, round), ")")
     ) %>%
     select(perc) %>%
     t()
@@ -625,7 +642,7 @@ get_availability <- function(data, strata, variable, name, output, round = 2) {
     summarise(
       n = sum(!is.na(get(variable)), na.rm = TRUE),
       total = n(),
-      perc = paste0(n, " (", round(100 * n / total, round), ")")
+      perc = paste0(n, " (", format_num(100 * n / total, round), ")")
     ) %>%
     select(perc) %>%
     t()
