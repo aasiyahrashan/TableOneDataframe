@@ -91,7 +91,7 @@ See the [package vignette](vignettes/introduction.Rmd) for detailed examples and
 
 ## License
 
-[Your chosen license]
+MIT License 
 
 ## Contributing
 
