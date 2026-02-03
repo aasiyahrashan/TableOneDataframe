@@ -13,7 +13,6 @@
 #'
 #' @export
 get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
-
   # Extract parameters (handles both modes)
   params <- extract_params(data, strata, output, round)
 
@@ -91,7 +90,6 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
 #'
 #' @export
 get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
-
   # Extract parameters (handles both modes)
   params <- extract_params(data, strata, output, round)
 
@@ -176,7 +174,6 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
 #' @export
 get_n_percent <- function(data, strata, variable, name, output, id = "", round = 2,
                           sort_by_freq = FALSE, data_override = NULL) {
-
   params <- extract_params(data, strata, output, round, data_override)
 
   # Data can't be grouped already
@@ -296,7 +293,6 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
 #' @export
 get_sum <- function(data, strata, variable, name, output,
                     round = 2) {
-
   params <- extract_params(data, strata, output, round)
 
   # Data can't be grouped already
@@ -363,7 +359,6 @@ get_sum <- function(data, strata, variable, name, output,
 #' @import tidyr
 #' @export
 get_count <- function(data, strata, variable, name, output) {
-
   params <- extract_params(data, strata, output)
 
   # Data can't be grouped already
@@ -427,7 +422,6 @@ get_count <- function(data, strata, variable, name, output) {
 #' @import tidyr
 #' @export
 get_unique_count <- function(data, strata, variable, name, output) {
-
   params <- extract_params(data, strata, output)
 
   # Data can't be grouped already
@@ -498,7 +492,6 @@ get_unique_count <- function(data, strata, variable, name, output) {
 #' @import tidyr
 #' @export
 get_n_percent_value <- function(data, strata, variable, value, name, output, round = 2) {
-
   params <- extract_params(data, strata, output, round)
 
   # Data can't be grouped already
@@ -573,7 +566,6 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
 #' @import tidyr
 #' @export
 get_availability <- function(data, strata, variable, name, output, round = 2) {
-
   params <- extract_params(data, strata, output, round)
 
   # Data can't be grouped already
