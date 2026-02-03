@@ -1,79 +1,58 @@
-format_num <- function(x, dp) {
-  # 1. Round the number 'x' to the desired number of decimal places 'dp'.
-  x_rounded <- round(x, dp)
-
-  # 2. Format the rounded number as a character string.
-  #    'nsmall = dp' forces the display of 'dp' number of zeros,
-  #    e.g., 5 becomes "5.00" if dp=2.
-  #    'trim = TRUE' removes any leading/trailing white space added by format().
-  formatted_x <- format(x_rounded, nsmall = dp, trim = TRUE)
-
-  return(formatted_x)
-}
-
-format_pvalue <- function(p_value) {
-  # 1. Check for the < 0.001 threshold
-  if (p_value < 0.001) {
-    return("<0.001")
-  } else {
-    # 2. Use the format logic for padding (always 3 dps for p-values)
-    # Note: We hardcode '3' instead of using the 'round' argument here
-    # because p-values are conventionally reported to 3 dps.
-    return(format(round(p_value, 3), nsmall = 3, trim = TRUE))
-  }
-}
-
 #' Title Get Median and IQR for a particular variable.
 #'
 #' Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.
 #'
-#' @param data tibble containing data. Can't be a grouped tibble
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param data Either a tibble OR a table_builder object from make_output_df
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (optional if using table_builder object)
 #' @param variable name of variable to be summarised
 #' @param name string name to put in the row.
-#' @param output The dataframe to append the requested summary to
-#' @param round The number of decimal places to round to.
+#' @param output The dataframe to append the requested summary to (optional if using table_builder object)
+#' @param round The number of decimal places to round to. (optional if using table_builder object)
 #'
 #' @import dplyr
 #'
 #' @export
 get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
+
+  # Extract parameters (handles both modes)
+  params <- extract_params(data, strata, output, round)
+
   # Data can't be grouped already
-  if (is_grouped_df(data)) {
+  if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
        Fix this by running `data <- ungroup(data)`")
   }
   # Strata variable needs to be a factor.
-  if (!is.factor(data[[strata]])) {
+  if (!is.factor(params$data[[params$strata]])) {
     stop("Strata variable needs to be a factor")
   }
   # Variable needs to be numeric
-  if (!is.numeric(data[[variable]])) {
+  if (!is.numeric(params$data[[variable]])) {
     stop("Variable needs to be numeric")
   }
 
   # Saving the column names for later.
-  colnames <- colnames(output)
+  colnames <- colnames(params$output)
 
   # I get the median and IQR for whichever variable, paste them together as characters,
   # and save it all in the output dataframe
 
-  by_strata <- data %>%
-    group_by(get(strata), .drop = FALSE) %>%
+  by_strata <- params$data %>%
+    group_by(get(params$strata), .drop = FALSE) %>%
     summarise(clean = paste0(
-      format_num(median(get(variable), na.rm = TRUE), round), " (",
-      format_num(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
-      format_num(quantile(get(variable), 0.75, na.rm = TRUE), round), ")"
+      format_num(median(get(variable), na.rm = TRUE), params$round), " (",
+      format_num(quantile(get(variable), 0.25, na.rm = TRUE), params$round), " - ",
+      format_num(quantile(get(variable), 0.75, na.rm = TRUE), params$round), ")"
     )) %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
-  total <- data %>%
+  total <- params$data %>%
     summarise(clean = paste0(
-      format_num(median(get(variable), na.rm = TRUE), round), " (",
-      format_num(quantile(get(variable), 0.25, na.rm = TRUE), round), " - ",
-      format_num(quantile(get(variable), 0.75, na.rm = TRUE), round), ")"
+      format_num(median(get(variable), na.rm = TRUE), params$round), " (",
+      format_num(quantile(get(variable), 0.25, na.rm = TRUE), params$round), " - ",
+      format_num(quantile(get(variable), 0.75, na.rm = TRUE), params$round), ")"
     )) %>%
     select(clean) %>%
     t()
@@ -83,68 +62,73 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
 
   ## Doing a Mann whitney/K-wallis test if there is a p value column.
   if ("p" %in% colnames) {
-    test <- data %>%
-      summarise(test = format_pvalue(kruskal.test(get(variable) ~ get(strata))$p.value)) %>%
+    test <- params$data %>%
+      summarise(test = format_pvalue(kruskal.test(get(variable) ~ get(params$strata))$p.value)) %>%
       select(test) %>%
       t()
     all <- c(all, test)
   }
 
   # Renaming the variables to let the 2 data frames stack on top of each other.
-  output <- rbind(output, all, stringsAsFactors = FALSE)
-  colnames(output) <- colnames
-  output
+  new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
+  colnames(new_output) <- colnames
+
+  return_output(params, new_output)
 }
 
 #' Title Get mean and SD for a particular variable. By group.
 #'
 #' Does a one-way ANOVA test (t-test if only 2 groups) if there the output dataframe had a p value column.
 #'
-#' @param data tibble containing data. Can't be a grouped tibble
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param data Either a tibble OR a table_builder object from make_output_df
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (optional if using table_builder object)
 #' @param variable name of variable to be summarised
 #' @param name string name to put in the row.
-#' @param output The dataframe to append the requested summary to
-#' @param round The number of decimal places to round results to.
+#' @param output The dataframe to append the requested summary to (optional if using table_builder object)
+#' @param round The number of decimal places to round results to. (optional if using table_builder object)
 #'
 #' @import dplyr
 #'
 #' @export
 get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
+
+  # Extract parameters (handles both modes)
+  params <- extract_params(data, strata, output, round)
+
   # Data can't be grouped already
-  if (is_grouped_df(data)) {
+  if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
        Fix this by running `data <- ungroup(data)`")
   }
   # Strata variable needs to be a factor.
-  if (!is.factor(data[[strata]])) {
+  if (!is.factor(params$data[[params$strata]])) {
     stop("Strata variable needs to be a factor")
   }
   # Variable needs to be numeric
-  if (!is.numeric(data[[variable]])) {
+  if (!is.numeric(params$data[[variable]])) {
     stop("Variable needs to be numeric")
   }
 
   # Saving the column names for later.
-  colnames <- colnames(output)
+  colnames <- colnames(params$output)
 
   # I get the median and IQR for whichever variable, paste them together as characters,
   # and save it all in the output dataframe
 
-  by_strata <- data %>%
-    group_by(get(strata), .drop = FALSE) %>%
+  by_strata <- params$data %>%
+    group_by(get(params$strata), .drop = FALSE) %>%
     summarise(clean = paste0(
-      format_num(mean(get(variable), na.rm = TRUE), round), " (",
-      format_num(sd(get(variable), na.rm = TRUE), round), ")"
+      format_num(mean(get(variable), na.rm = TRUE), params$round), " (",
+      format_num(sd(get(variable), na.rm = TRUE), params$round), ")"
     )) %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
-  total <- data %>%
+  total <- params$data %>%
     summarise(clean = paste0(
-      format_num(mean(get(variable), na.rm = TRUE), round), " (",
-      format_num(sd(get(variable), na.rm = TRUE), round), ")"
+      format_num(mean(get(variable), na.rm = TRUE), params$round), " (",
+      format_num(sd(get(variable), na.rm = TRUE), params$round), ")"
     )) %>%
     select(clean) %>%
     t()
@@ -154,17 +138,19 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
 
   ## Doing a oneway ANOVA test.
   if ("p" %in% colnames) {
-    test <- data %>%
-      summarise(test = format_pvalue(oneway.test(get(variable) ~ get(strata))$p.value)) %>%
+    test <- params$data %>%
+      summarise(test = format_pvalue(oneway.test(get(variable) ~ get(params$strata))$p.value)) %>%
       select(test) %>%
       t()
     all <- c(all, test)
   }
 
   # Renaming the variables to let the 2 data frames stack on top of each other.
-  output <- rbind(output, all, stringsAsFactors = FALSE)
-  colnames(output) <- colnames
-  output
+  new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
+  colnames(new_output) <- colnames
+
+
+  return_output(params, new_output)
 }
 
 
@@ -174,83 +160,87 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
 #' NAs and empty strings are converted to a separate level "Missing"
 #' Does a chisquare test if the 'output' argument has a p value column in it.
 #' Unless ID variable is specified, the denominator is the number of rows in the dataset.
-#' @param data tibble containing data. Can't be a grouped tibble
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param data Either a tibble OR a table_builder object from make_output_df
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (optional if using table_builder object)
 #' @param variable Ideally a factor variable. If not, gets converted to factor anyway.
 #' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to
+#' @param output The dataframe to append the requested summary to (optional if using table_builder object)
 #' @param id Optional. Character vector containing name of variable to use when counting the denominator. Allows the sum of the numerators to be greater than 100 if there is more than one row per denominator variable.
-#' @param round The number of decimal places to round results to
+#' @param round The number of decimal places to round results to (optional if using table_builder object)
 #' @param sort_by_freq TRUE/FALSE for whether to overwrite factor ordering and sort in descending order of total frequency.
+#' @param data_override Override data in table_builder object with this data frame (optional, rarely used)
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
 get_n_percent <- function(data, strata, variable, name, output, id = "", round = 2,
-                          sort_by_freq = FALSE) {
+                          sort_by_freq = FALSE, data_override = NULL) {
+
+  params <- extract_params(data, strata, output, round, data_override)
+
   # Data can't be grouped already
-  if (is_grouped_df(data)) {
+  if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
        Fix this by running `data <- ungroup(data)`")
   }
   # Variable needs to be a factor.
-  if (!is.factor(data[[strata]])) {
+  if (!is.factor(params$data[[params$strata]])) {
     stop("Strata variable needs to be a factor")
   }
 
   # Saving the column names for later.
-  colnames <- colnames(output)
+  colnames <- colnames(params$output)
 
   # Converting the variable to a factor if it isn't already.
-  if (!is.factor(data[[variable]])) {
-    data[[variable]] <- factor(data[[variable]])
+  if (!is.factor(params$data[[variable]])) {
+    params$data[[variable]] <- factor(params$data[[variable]])
   }
 
   # replacing NAs with missing, and putting it last.
-  data[[variable]] <- fct_na_value_to_level(data[[variable]], level = "Missing")
+  params$data[[variable]] <- fct_na_value_to_level(params$data[[variable]], level = "Missing")
 
   # Also replacing empty strings with the word 'Missing' and putting that last.
-  data[[variable]] <- suppressWarnings(fct_recode(data[[variable]], Missing = ""))
-  data[[variable]] <- suppressWarnings(fct_relevel(data[[variable]], "Missing", after = Inf))
+  params$data[[variable]] <- suppressWarnings(fct_recode(params$data[[variable]], Missing = ""))
+  params$data[[variable]] <- suppressWarnings(fct_relevel(params$data[[variable]], "Missing", after = Inf))
 
   # Working out what the denominator should be. If ID is specified,
   # everthing gets counted once per ID. If not, once per row.
   if (id != "") {
-    denominators <- data %>%
-      distinct(across(c(id, strata))) %>%
-      group_by(get(strata)) %>%
+    denominators <- params$data %>%
+      distinct(across(c(id, params$strata))) %>%
+      group_by(get(params$strata)) %>%
       summarise(den = n())
-    total_den <- n_distinct(data[[id]])
+    total_den <- n_distinct(params$data[[id]])
   } else {
-    denominators <- data %>%
-      group_by(get(strata)) %>%
+    denominators <- params$data %>%
+      group_by(get(params$strata)) %>%
       summarise(den = n())
-    total_den <- nrow(data)
+    total_den <- nrow(params$data)
   }
 
   # Doing it for the strata.
   by_strata <-
-    data %>%
-    group_by(get(strata), get(variable), .drop = FALSE) %>%
+    params$data %>%
+    group_by(get(params$strata), get(variable), .drop = FALSE) %>%
     summarise(n = n()) %>%
     ungroup() %>%
-    complete(`get(strata)`, `get(variable)`, fill = list(n = 0)) %>%
-    left_join(denominators, by = c("get(strata)")) %>%
-    group_by(`get(strata)`) %>%
-    mutate(perc = paste0(n, " (", format_num(100 * n / den, round), ")")) %>%
+    complete(`get(params$strata)`, `get(variable)`, fill = list(n = 0)) %>%
+    left_join(denominators, by = c("get(params$strata)")) %>%
+    group_by(`get(params$strata)`) %>%
+    mutate(perc = paste0(n, " (", format_num(100 * n / den, params$round), ")")) %>%
     select(-n, -den) %>%
-    pivot_wider(names_from = `get(strata)`, values_from = perc) %>%
+    pivot_wider(names_from = `get(params$strata)`, values_from = perc) %>%
     select(-`get(variable)`)
 
   # Now the total.
   total <-
-    data %>%
+    params$data %>%
     group_by(get(variable), .drop = FALSE) %>%
     summarise(n = n()) %>%
     ungroup() %>%
     complete(`get(variable)`, fill = list(n = 0)) %>%
-    mutate(perc = paste0(n, " (", format_num(100 * n / total_den, round), ")"))
+    mutate(perc = paste0(n, " (", format_num(100 * n / total_den, params$round), ")"))
 
   # Joining them together
   all <- cbind(total, by_strata) %>%
@@ -267,17 +257,17 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
   }
 
   # Top row contains the variable name
-  top_row <- c(paste0(name, " N(%)"), rep("", length(output) - 1))
+  top_row <- c(paste0(name, " N(%)"), rep("", length(params$output) - 1))
 
   # Doing a chi-square test if necessary
   if ("p" %in% colnames) {
-    test <- data %>%
-      summarise(test = format_pvalue(chisq.test(get(variable), get(strata))$p.value)) %>%
+    test <- params$data %>%
+      summarise(test = format_pvalue(chisq.test(get(variable), get(params$strata))$p.value)) %>%
       select(test) %>%
       t()
 
     # Overwriting the top row with the p value.
-    top_row <- c(paste0(name, " N(%)"), rep("", length(output) - 2), test)
+    top_row <- c(paste0(name, " N(%)"), rep("", length(params$output) - 2), test)
     # Also, the 'all' df needs an extra col for the p value
     all["p"] <- ""
   }
@@ -285,19 +275,20 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
   all <- rbind(top_row, all)
   # Renaming the variables to let the 2 data frames stack on top of each other.
   colnames(all) <- colnames
-  output <- rbind(output, all, stringsAsFactors = FALSE)
-  output
+  new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
+
+  return_output(params, new_output)
 }
 
 
 #' Get sum of a numeric variable.
 #' Treats missing values as zero.
 #'
-#' @param data tibble containing data. Can't be a grouped tibble
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param data Either a tibble OR a table_builder object from make_output_df
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)
 #' @param variable Numeric variable to get sum for
 #' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to
+#' @param output The dataframe to append the requested summary to (Optional if using table_builder object)
 #'
 #' @import dplyr
 #' @import forcats
@@ -305,35 +296,38 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
 #' @export
 get_sum <- function(data, strata, variable, name, output,
                     round = 2) {
+
+  params <- extract_params(data, strata, output, round)
+
   # Data can't be grouped already
-  if (is_grouped_df(data)) {
+  if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
        Fix this by running `data <- ungroup(data)`")
   }
   # Strata variable needs to be a factor.
-  if (!is.factor(data[[strata]])) {
+  if (!is.factor(params$data[[params$strata]])) {
     stop("Strata variable needs to be a factor")
   }
   # Variable needs to be numeric
-  if (!is.numeric(data[[variable]])) {
+  if (!is.numeric(params$data[[variable]])) {
     stop("Variable needs to be numeric")
   }
 
   # Saving the column names for later.
-  colnames <- colnames(output)
+  colnames <- colnames(params$output)
 
   # I get the sum for whichever variable, paste them together as characters,
   # and save it all in the output dataframe
 
-  by_strata <- data %>%
-    group_by(get(strata), .drop = FALSE) %>%
-    summarise(clean = format_num((sum(get(variable), na.rm = TRUE)), round)) %>%
+  by_strata <- params$data %>%
+    group_by(get(params$strata), .drop = FALSE) %>%
+    summarise(clean = format_num((sum(get(variable), na.rm = TRUE)), params$round)) %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
-  total <- data %>%
-    summarise(clean = format_num((sum(get(variable), na.rm = TRUE)), round)) %>%
+  total <- params$data %>%
+    summarise(clean = format_num((sum(get(variable), na.rm = TRUE)), params$round)) %>%
     select(clean) %>%
     t()
 
@@ -342,7 +336,7 @@ get_sum <- function(data, strata, variable, name, output,
 
   ## No test.
   if ("p" %in% colnames) {
-    test <- data %>%
+    test <- params$data %>%
       summarise(test = "") %>%
       select(test) %>%
       t()
@@ -350,42 +344,45 @@ get_sum <- function(data, strata, variable, name, output,
   }
 
   # Renaming the variables to let the 2 data frames stack on top of each other.
-  output <- rbind(output, all, stringsAsFactors = FALSE)
-  colnames(output) <- colnames
-  output
+  new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
+  colnames(new_output) <- colnames
+  return_output(params, new_output)
 }
 
 #' Count number of non-missing values
 #' Displays number of non-missing rows.
 #'
-#' @param data tibble containing data. Can't be a grouped tibble
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param data Either a tibble OR a table_builder object from make_output_df
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)
 #' @param variable Ideally a factor variable. If not, gets converted to factor anyway.
 #' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to
+#' @param output The dataframe to append the requested summary to (Optional if using table_builder object)
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
 get_count <- function(data, strata, variable, name, output) {
+
+  params <- extract_params(data, strata, output)
+
   # Data can't be grouped already
-  if (is_grouped_df(data)) {
+  if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
        Fix this by running `data <- ungroup(data)`")
   }
   # Strata needs to be a factor.
-  if (!is.factor(data[[strata]])) {
+  if (!is.factor(params$data[[params$strata]])) {
     stop("Strata variable needs to be a factor")
   }
 
   # Saving the column names for later.
-  colnames <- colnames(output)
+  colnames <- colnames(params$output)
 
   # Doing it for the strata.
   by_strata <-
-    data %>%
-    group_by(get(strata), .drop = FALSE) %>%
+    params$data %>%
+    group_by(get(params$strata), .drop = FALSE) %>%
     summarise(n = sum(!is.na(get(variable)))) %>%
     select(n) %>%
     t()
@@ -393,7 +390,7 @@ get_count <- function(data, strata, variable, name, output) {
 
   # Now the total.
   total <-
-    data %>%
+    params$data %>%
     summarise(n = sum(!is.na(get(variable)))) %>%
     select(n) %>%
     t()
@@ -403,7 +400,7 @@ get_count <- function(data, strata, variable, name, output) {
 
   ## No test.
   if ("p" %in% colnames) {
-    test <- data %>%
+    test <- params$data %>%
       summarise(test = "") %>%
       select(test) %>%
       t()
@@ -411,43 +408,46 @@ get_count <- function(data, strata, variable, name, output) {
   }
 
   # Renaming the variables to let the 2 data frames stack on top of each other.
-  output <- rbind(output, all, stringsAsFactors = FALSE)
-  colnames(output) <- colnames
-  output
+  new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
+  colnames(new_output) <- colnames
+  return_output(params, new_output)
 }
 
 #' Count number of unique non-missing values
 #' Displays number of non-missing rows.
 #'
-#' @param data tibble containing data. Can't be a grouped tibble
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param data Either a tibble OR a table_builder object from make_output_df
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)
 #' @param variable Ideally a factor variable. If not, gets converted to factor anyway.
 #' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to
+#' @param output The dataframe to append the requested summary to (Optional if using table_builder object)
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
 get_unique_count <- function(data, strata, variable, name, output) {
+
+  params <- extract_params(data, strata, output)
+
   # Data can't be grouped already
-  if (is_grouped_df(data)) {
+  if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
        Fix this by running `data <- ungroup(data)`")
   }
   # Strata needs to be a factor.
-  if (!is.factor(data[[strata]])) {
+  if (!is.factor(params$data[[params$strata]])) {
     stop("Strata variable needs to be a factor")
   }
 
   # Saving the column names for later.
-  colnames <- colnames(output)
+  colnames <- colnames(params$output)
 
   # Doing it for the strata.
   by_strata <-
-    data %>%
-    distinct(get(strata), get(variable), .keep_all = TRUE) %>%
-    group_by(get(strata), .drop = FALSE) %>%
+    params$data %>%
+    distinct(get(params$strata), get(variable), .keep_all = TRUE) %>%
+    group_by(get(params$strata), .drop = FALSE) %>%
     summarise(n = sum(!is.na(get(variable)))) %>%
     select(n) %>%
     t()
@@ -455,7 +455,7 @@ get_unique_count <- function(data, strata, variable, name, output) {
 
   # Now the total.
   total <-
-    data %>%
+    params$data %>%
     distinct(get(variable), .keep_all = TRUE) %>%
     summarise(n = sum(!is.na(get(variable)))) %>%
     select(n) %>%
@@ -466,7 +466,7 @@ get_unique_count <- function(data, strata, variable, name, output) {
 
   ## No test.
   if ("p" %in% colnames) {
-    test <- data %>%
+    test <- params$data %>%
       summarise(test = "") %>%
       select(test) %>%
       t()
@@ -474,9 +474,10 @@ get_unique_count <- function(data, strata, variable, name, output) {
   }
 
   # Renaming the variables to let the 2 data frames stack on top of each other.
-  output <- rbind(output, all, stringsAsFactors = FALSE)
-  colnames(output) <- colnames
-  output
+  new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
+  colnames(new_output) <- colnames
+
+  return_output(params, new_output)
 }
 
 #' Count number of times a value is present in a variable
@@ -484,40 +485,43 @@ get_unique_count <- function(data, strata, variable, name, output) {
 #' NA values are not included in the numerator, but are included in the denominator.
 #' Chi squared test. Equivalent to Z test if only 2 groups.
 #'
-#' @param data tibble containing data. Can't be a grouped tibble
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param data Either a tibble OR a table_builder object from make_output_df
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)
 #' @param variable Ideally a factor variable. If not, gets converted to factor anyway.
 #' @param value Which value to count.
 #' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to
-#' @param round The number of decimal places to round results to.
+#' @param output The dataframe to append the requested summary to (optional if using table_builder object)
+#' @param round The number of decimal places to round results to. (optional if using table_builder object)
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
 get_n_percent_value <- function(data, strata, variable, value, name, output, round = 2) {
+
+  params <- extract_params(data, strata, output, round)
+
   # Data can't be grouped already
-  if (is_grouped_df(data)) {
+  if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
        Fix this by running `data <- ungroup(data)`")
   }
   # Strata needs to be a factor.
-  if (!is.factor(data[[strata]])) {
+  if (!is.factor(params$data[[params$strata]])) {
     stop("Strata variable needs to be a factor")
   }
 
   # Saving the column names for later.
-  colnames <- colnames(output)
+  colnames <- colnames(params$output)
 
   # Doing it for the strata.
   by_strata <-
-    data %>%
-    group_by(get(strata), .drop = FALSE) %>%
+    params$data %>%
+    group_by(get(params$strata), .drop = FALSE) %>%
     summarise(
       n = sum(get(variable) == value, na.rm = TRUE),
       total = n(),
-      perc = paste0(n, " (", format_num(100 * n / total, round), ")")
+      perc = paste0(n, " (", format_num(100 * n / total, params$round), ")")
     ) %>%
     select(perc) %>%
     t()
@@ -525,11 +529,11 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
 
   # Now the total.
   total <-
-    data %>%
+    params$data %>%
     summarise(
       n = sum(get(variable) == value, na.rm = TRUE),
       total = n(),
-      perc = paste0(n, " (", format_num(100 * n / total, round), ")")
+      perc = paste0(n, " (", format_num(100 * n / total, params$round), ")")
     ) %>%
     select(perc) %>%
     t()
@@ -540,8 +544,8 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
   ## No test.
   if ("p" %in% colnames) {
     # Need to create summary table for prop.test.
-    test <- data %>%
-      summarise(test = format_pvalue(chisq.test(get(variable), get(strata))$p.value)) %>%
+    test <- params$data %>%
+      summarise(test = format_pvalue(chisq.test(get(variable), get(params$strata))$p.value)) %>%
       select(test) %>%
       t()
 
@@ -549,88 +553,50 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
   }
 
   # Renaming the variables to let the 2 data frames stack on top of each other.
-  output <- rbind(output, all, stringsAsFactors = FALSE)
-  colnames(output) <- colnames
-  output
-}
-#' Make output dataframe
-#'
-#' Includes neat column names with counts of observations in each group.
-#' @param data tibble containing data. Can't be a grouped tibble. Also, can't have a variable named 'variable'.
-#' @param strata A factor variable to stratify by.
-#' @param include_tests Should it create a space for p-values?
-#' @import dplyr
-#' @export
-make_output_df <- function(data, strata, include_tests = FALSE) {
-  # Data can't be grouped already
-  if (is_grouped_df(data)) {
-    stop("The `data` provided is grouped. This is cause issues with later functions.
-       Fix this by running `data <- ungroup(data)`")
-  }
-  # Variable needs to be a factor.
-  if (!is.factor(data[[strata]])) {
-    stop("Strata variable needs to be a factor")
-  }
+  new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
+  colnames(new_output) <- colnames
 
-  # Can't allow variables with the same name as the argument of subsequent functions.
-  if ("variable" %in% colnames(data) | "Variable" %in% colnames(data)) {
-    stop("There is a variable in the dataframe named 'variable'. Please rename it and try again.")
-  }
-
-  # Getting levels counts
-  levels <- levels(data[[strata]])
-  strata_names <- data %>%
-    group_by(get(strata), .drop = FALSE) %>%
-    summarise(n = n()) %>%
-    mutate(names = paste0(`get(strata)`, " (N=", n, ")"))
-
-  total_name <- paste0("Total", " (N=", nrow(data), ")")
-
-  if (include_tests) {
-    output <- data.frame(matrix(ncol = 3 + length(levels), nrow = 0))
-    colnames(output) <- c("Variable", total_name, strata_names$names, "p")
-  } else {
-    output <- data.frame(matrix(ncol = 2 + length(levels), nrow = 0))
-    colnames(output) <- c("Variable", total_name, strata_names$names)
-  }
-  output
+  return_output(params, new_output)
 }
 
 #' Get N(%) availability - the number of times the variable is not NA
 #'
-#' @param data tibble containing data. Can't be a grouped tibble
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work.
+#' @param data Either a tibble OR a table_builder object from make_output_df
+#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)
 #' @param variable Variable to check availability for. Can be numeric, string, factor.
 #' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to
-#' @param round The number of decimal places to round results to.
+#' @param output The dataframe to append the requested summary to (Optional if using table_builder object)
+#' @param round The number of decimal places to round results to. (Optional if using table_builder object)
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
 get_availability <- function(data, strata, variable, name, output, round = 2) {
+
+  params <- extract_params(data, strata, output, round)
+
   # Data can't be grouped already
-  if (is_grouped_df(data)) {
+  if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
        Fix this by running `data <- ungroup(data)`")
   }
   # Strata needs to be a factor.
-  if (!is.factor(data[[strata]])) {
+  if (!is.factor(params$data[[params$strata]])) {
     stop("Strata variable needs to be a factor")
   }
 
   # Saving the column names for later.
-  colnames <- colnames(output)
+  colnames <- colnames(params$output)
 
   # Doing it for the strata.
   by_strata <-
-    data %>%
-    group_by(get(strata), .drop = FALSE) %>%
+    params$data %>%
+    group_by(get(params$strata), .drop = FALSE) %>%
     summarise(
       n = sum(!is.na(get(variable)), na.rm = TRUE),
       total = n(),
-      perc = paste0(n, " (", format_num(100 * n / total, round), ")")
+      perc = paste0(n, " (", format_num(100 * n / total, params$round), ")")
     ) %>%
     select(perc) %>%
     t()
@@ -638,11 +604,11 @@ get_availability <- function(data, strata, variable, name, output, round = 2) {
 
   # Now the total.
   total <-
-    data %>%
+    params$data %>%
     summarise(
       n = sum(!is.na(get(variable)), na.rm = TRUE),
       total = n(),
-      perc = paste0(n, " (", format_num(100 * n / total, round), ")")
+      perc = paste0(n, " (", format_num(100 * n / total, params$round), ")")
     ) %>%
     select(perc) %>%
     t()
@@ -652,7 +618,7 @@ get_availability <- function(data, strata, variable, name, output, round = 2) {
 
   ## No test.
   if ("p" %in% colnames) {
-    test <- data %>%
+    test <- params$data %>%
       summarise(test = "") %>%
       select(test) %>%
       t()
@@ -660,7 +626,7 @@ get_availability <- function(data, strata, variable, name, output, round = 2) {
   }
 
   # Renaming the variables to let the 2 data frames stack on top of each other.
-  output <- rbind(output, all, stringsAsFactors = FALSE)
-  colnames(output) <- colnames
-  output
+  new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
+  colnames(new_output) <- colnames
+  return_output(params, new_output)
 }

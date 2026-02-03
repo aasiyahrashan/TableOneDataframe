@@ -1,76 +1,195 @@
 ---
-title: "Introduction"
+title: "Introduction to TableOneDataframe"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction}
+  %\VignetteIndexEntry{Introduction to TableOneDataframe}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
+  collapse = TRUE,
   comment = "#>"
 )
 ```
 
-This packages builds a 'Table One' for a medical journal. It adds summaries of each variable based on user specifications, and outputs the result as a dataframe which can be written to excel/a csv file/embedded into a markdown document. 
+## Overview
 
-It take a 'strata' variable which is an ordered factor. The table is divided into a 'Total' column + one column for each level of the factor. 
-The `make_output_df()` function creates an empty dataframe with the counts of each observation included in the column headings. 
+This package builds a 'Table One' for medical journals. It creates publication-ready summary tables with:
 
-The `get_()` functions add rows to that dataframe. 
-
+- Stratification by a factor variable (with one column per level)
+- Automatic statistical testing (Mann-Whitney, Kruskal-Wallis, chi-square, ANOVA)
+- Clean formatting suitable for direct export to Excel, CSV, or markdown
 ```{r setup}
 library(TableOneDataframe)
 library(knitr)
+library(dplyr)
 data(mtcars)
-```
 
-
-```{r}
-# Making the stata variable a factor
+# Prepare the stratification variable as a factor
 mtcars$cyl <- factor(mtcars$cyl)
 levels(mtcars$cyl) <- c("4", "6", "8", "Extra")
 ```
 
-```{r}
-# Creating an empty output table to store results. Make sure the 'strata' variable is a factor.
-# Empty levels get a separate column.
-# The include_tests argument determines if all of the functions after do p-value testing.
+## Two Ways to Build Tables
+
+TableOneDataframe supports two methods: a **streamlined piped approach** (recommended) and a **legacy approach** for backward compatibility.
+
+### Method 1: Streamlined Piped Approach (Recommended)
+
+The new method uses `%>%` to chain operations, reducing repetition:
+```{r new-method}
+# Build table with piping
+table1 <- make_output_df(mtcars, "cyl", include_tests = TRUE, round = 2) %>%
+  get_median_iqr(variable = 'disp', name = "Displacement") %>%
+  get_mean_sd(variable = 'hp', name = "Horsepower") %>%
+  get_count(variable = 'wt', name = "Weight") %>%
+  get_n_percent(variable = 'gear', name = "Gears") %>% 
+  # Extract the final dataframe
+  extract_df()
+
+kable(table1)
+```
+
+**Benefits:**
+
+- Less repetitive (no need to specify `mtcars`, `"cyl"`, and `output` repeatedly)
+- Set default `round` once in `make_output_df()`
+- Cleaner, more readable code
+- Can override `round` for individual rows if needed
+
+### Method 2: Legacy Approach
+
+The original method still works for existing code:
+```{r legacy-method}
+# Create empty output table
 output <- make_output_df(mtcars, "cyl", include_tests = TRUE)
-# Median IQR
-output <- get_median_iqr(mtcars, 'cyl', 'disp', "Display", output)
-# Mean (SD)
-output <- get_mean_sd(mtcars, 'cyl', 'hp', "HP", output)
 
-# Count non missing
-output <- get_count(mtcars, 'cyl', 'wt', "WT", output)
-# Count unique non missing
-output <- get_unique_count(mtcars, 'cyl', 'gear', "Gears", output)
-# Count specific value
-output <- get_n_percent_value(mtcars, 'cyl', 'vs', 1, "VS = 1", output)
-# Sum a numeric variable
-output <- get_sum(mtcars, 'cyl', 'disp', "Display", output)
+# Add rows one at a time
+output <- get_median_iqr(mtcars, 'cyl', 'disp', "Displacement", output, round = 2)
+output <- get_mean_sd(mtcars, 'cyl', 'hp', "Horsepower", output, round = 2)
+output <- get_count(mtcars, 'cyl', 'wt', "Weight", output)
 
-# N %
-# Adding a random NA to demonstrate. 
-mtcars[3, 'gear'] <- NA
-# We want to treat gears as a factor rather than a number
-mtcars$gear <- as.factor(mtcars$gear)
-output <- get_n_percent(mtcars, 'cyl', 'gear', "Gear", output)
-
-# If it's not a factor, gets converted anyway.
-output <- get_n_percent(mtcars, 'cyl', 'carb', "Carb", output)
-
-# Can also sort by frequency instead of factor/alphabetical ordering.
-output <- get_n_percent(mtcars, 'cyl', 'carb', "Carb", output, sort_by_freq = TRUE)
-
-# Get availability of both numeric and non-numeric variables.
-output <- get_availability(mtcars, 'cyl', 'gear', "Gear", output)
-# Adding NA to demonstrate
-mtcars[12:16, 'wt'] <- NA
-output <- get_availability(mtcars, 'cyl', 'wt', "wt", output)
-
-# Output is just a dataframe, so can be used with kable, or written to excel/csv.
 kable(output)
 ```
+
+## Available Summary Functions
+
+### Continuous Variables
+```{r continuous}
+table_continuous <- make_output_df(mtcars, "cyl", include_tests = TRUE) %>%
+  get_median_iqr(variable = 'disp', name = "Displacement (Median/IQR)") %>%
+  get_mean_sd(variable = 'hp', name = "Horsepower (Mean/SD)") %>%
+  get_sum(variable = 'disp', name = "Total Displacement")
+
+kable(table_continuous$output)
+```
+
+- `get_median_iqr()` - Median and interquartile range (uses Kruskal-Wallis test)
+- `get_mean_sd()` - Mean and standard deviation (uses one-way ANOVA)
+- `get_sum()` - Sum of values (treats NA as zero)
+
+### Categorical Variables
+```{r categorical}
+# Prepare categorical variables
+mtcars$gear <- as.factor(mtcars$gear)
+mtcars[3, 'gear'] <- NA  # Add missing value to demonstrate
+
+table_categorical <- make_output_df(mtcars, "cyl", include_tests = TRUE) %>%
+  get_n_percent(variable = 'gear', name = "Gears") %>%
+  get_n_percent(variable = 'carb', name = "Carburetors") %>%
+  get_n_percent(variable = 'carb', name = "Carburetors (by frequency)", 
+                sort_by_freq = TRUE)
+
+kable(table_categorical$output)
+```
+
+- `get_n_percent()` - Count and percentage (uses chi-square test)
+  - Automatically handles factor conversion
+  - Missing values shown as "Missing" category
+  - Optional `sort_by_freq = TRUE` to sort by frequency instead of factor levels
+  - Optional `id` parameter for repeated measures data
+
+### Counts and Availability
+```{r counts}
+# Add some missing values
+mtcars[12:16, 'wt'] <- NA
+
+table_counts <- make_output_df(mtcars, "cyl", include_tests = FALSE) %>%
+  get_count(variable = 'wt', name = "Weight (non-missing count)") %>%
+  get_unique_count(variable = 'gear', name = "Unique gears") %>%
+  get_n_percent_value(variable = 'vs', value = 1, name = "V-shaped engine") %>%
+  get_availability(variable = 'wt', name = "Weight availability") %>%
+  get_availability(variable = 'gear', name = "Gear availability")
+
+kable(table_counts$output)
+```
+
+- `get_count()` - Count of non-missing values
+- `get_unique_count()` - Count of unique non-missing values
+- `get_n_percent_value()` - Count/percentage of a specific value (uses chi-square test)
+- `get_availability()` - Percentage of non-missing values
+
+## Advanced Features
+
+### Custom Rounding
+```{r rounding}
+# Set default rounding
+table_round <- make_output_df(mtcars, "cyl", include_tests = TRUE, round = 1) %>%
+  get_mean_sd(variable = 'hp', name = "HP (1 decimal)") %>%
+  get_mean_sd(variable = 'mpg', name = "MPG (3 decimals)", round = 3) %>% 
+  # Extract dataframe (Note, `kable(table_round$output)`) will also work.
+  extract_df()
+
+kable(table_round)
+```
+
+### Using Different Data for Specific Rows
+
+In rare cases, you might want to use a different dataset for one row (e.g., a subset):
+```{r subset-data}
+mtcars_high_hp <- mtcars[mtcars$hp > 100, ]
+
+table_subset <- make_output_df(mtcars, "cyl", include_tests = TRUE) %>%
+  get_mean_sd(variable = 'hp', name = "All cars - HP") %>%
+  get_n_percent(variable = 'gear', name = "High HP cars - Gears", 
+                data_override = mtcars_high_hp) %>% 
+  extract_df()
+
+kable(table_subset)
+```
+
+## Complete Example
+```{r complete-example}
+# Prepare data
+mtcars$cyl <- factor(mtcars$cyl, levels = c("4", "6", "8"))
+mtcars$gear <- factor(mtcars$gear)
+mtcars$am <- factor(mtcars$am, levels = c(0, 1), labels = c("Automatic", "Manual"))
+
+# Build comprehensive table
+complete_table <- make_output_df(mtcars, "cyl", include_tests = TRUE, round = 1) %>%
+  get_median_iqr(variable = 'mpg', name = "Miles per gallon") %>%
+  get_mean_sd(variable = 'hp', name = "Horsepower") %>%
+  get_median_iqr(variable = 'wt', name = "Weight (1000 lbs)") %>%
+  get_n_percent(variable = 'am', name = "Transmission") %>%
+  get_n_percent(variable = 'gear', name = "Number of gears") %>%
+  extract_df()
+
+# Display
+kable(complete_table)
+
+# Export to CSV
+# write.csv(complete_table$output, "table1.csv", row.names = FALSE)
+
+# Or use with other packages
+# library(writexl)
+# write_xlsx(complete_table$output, "table1.xlsx")
+```
+
+## Tips
+
+1. **Always make your strata variable a factor** before calling `make_output_df()`
+2. **Use the piped approach** for new code - it's cleaner and less error-prone
+3. **Set `include_tests = TRUE`** if you want automatic statistical testing
+4. **Use meaningful row names** - they appear in the first column of your table
+5. **The output is a standard dataframe** - use it with `knitr::kable()`, `writexl`, `write.csv()`, etc.

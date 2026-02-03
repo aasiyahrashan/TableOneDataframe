@@ -8,15 +8,15 @@ Treats missing values as zero.}
 get_sum(data, strata, variable, name, output, round = 2)
 }
 \arguments{
-\item{data}{tibble containing data. Can't be a grouped tibble}
+\item{data}{Either a tibble OR a table_builder object from make_output_df}
 
-\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work.}
+\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)}
 
 \item{variable}{Numeric variable to get sum for}
 
 \item{name}{string name to put into the row}
 
-\item{output}{The dataframe to append the requested summary to}
+\item{output}{The dataframe to append the requested summary to (Optional if using table_builder object)}
 }
 \description{
 Get sum of a numeric variable.

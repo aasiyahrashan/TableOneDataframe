@@ -7,17 +7,17 @@
 get_median_iqr(data, strata, variable, name, output, round = 2)
 }
 \arguments{
-\item{data}{tibble containing data. Can't be a grouped tibble}
+\item{data}{Either a tibble OR a table_builder object from make_output_df}
 
-\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work.}
+\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work. (optional if using table_builder object)}
 
 \item{variable}{name of variable to be summarised}
 
 \item{name}{string name to put in the row.}
 
-\item{output}{The dataframe to append the requested summary to}
+\item{output}{The dataframe to append the requested summary to (optional if using table_builder object)}
 
-\item{round}{The number of decimal places to round to.}
+\item{round}{The number of decimal places to round to. (optional if using table_builder object)}
 }
 \description{
 Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.

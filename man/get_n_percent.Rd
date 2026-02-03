@@ -12,25 +12,28 @@ get_n_percent(
   output,
   id = "",
   round = 2,
-  sort_by_freq = FALSE
+  sort_by_freq = FALSE,
+  data_override = NULL
 )
 }
 \arguments{
-\item{data}{tibble containing data. Can't be a grouped tibble}
+\item{data}{Either a tibble OR a table_builder object from make_output_df}
 
-\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work.}
+\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work. (optional if using table_builder object)}
 
 \item{variable}{Ideally a factor variable. If not, gets converted to factor anyway.}
 
 \item{name}{string name to put into the row}
 
-\item{output}{The dataframe to append the requested summary to}
+\item{output}{The dataframe to append the requested summary to (optional if using table_builder object)}
 
 \item{id}{Optional. Character vector containing name of variable to use when counting the denominator. Allows the sum of the numerators to be greater than 100 if there is more than one row per denominator variable.}
 
-\item{round}{The number of decimal places to round results to}
+\item{round}{The number of decimal places to round results to (optional if using table_builder object)}
 
 \item{sort_by_freq}{TRUE/FALSE for whether to overwrite factor ordering and sort in descending order of total frequency.}
+
+\item{data_override}{Override data in table_builder object with this data frame (optional, rarely used)}
 }
 \description{
 Gets count and percentage for factor variables by group.

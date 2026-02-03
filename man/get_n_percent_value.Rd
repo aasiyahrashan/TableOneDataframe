@@ -7,9 +7,9 @@
 get_n_percent_value(data, strata, variable, value, name, output, round = 2)
 }
 \arguments{
-\item{data}{tibble containing data. Can't be a grouped tibble}
+\item{data}{Either a tibble OR a table_builder object from make_output_df}
 
-\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work.}
+\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)}
 
 \item{variable}{Ideally a factor variable. If not, gets converted to factor anyway.}
 
@@ -17,9 +17,9 @@ get_n_percent_value(data, strata, variable, value, name, output, round = 2)
 
 \item{name}{string name to put into the row}
 
-\item{output}{The dataframe to append the requested summary to}
+\item{output}{The dataframe to append the requested summary to (optional if using table_builder object)}
 
-\item{round}{The number of decimal places to round results to.}
+\item{round}{The number of decimal places to round results to. (optional if using table_builder object)}
 }
 \description{
 NA values are not included in the numerator, but are included in the denominator.
