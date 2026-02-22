@@ -33,25 +33,22 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
   # Saving the column names for later.
   colnames <- colnames(params$output)
 
-  # I get the median and IQR for whichever variable, paste them together as characters,
-  # and save it all in the output dataframe
-
   by_strata <- params$data %>%
-    group_by(get(params$strata), .drop = FALSE) %>%
+    group_by(.data[[params$strata]], .drop = FALSE) %>%
     summarise(clean = paste0(
-      format_num(median(get(variable), na.rm = TRUE), params$round), " (",
-      format_num(quantile(get(variable), 0.25, na.rm = TRUE), params$round), " - ",
-      format_num(quantile(get(variable), 0.75, na.rm = TRUE), params$round), ")"
-    )) %>%
+      format_num(median(.data[[variable]], na.rm = TRUE), params$round), " (",
+      format_num(quantile(.data[[variable]], 0.25, na.rm = TRUE), params$round), " - ",
+      format_num(quantile(.data[[variable]], 0.75, na.rm = TRUE), params$round), ")"
+    ), .groups = "drop") %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
   total <- params$data %>%
     summarise(clean = paste0(
-      format_num(median(get(variable), na.rm = TRUE), params$round), " (",
-      format_num(quantile(get(variable), 0.25, na.rm = TRUE), params$round), " - ",
-      format_num(quantile(get(variable), 0.75, na.rm = TRUE), params$round), ")"
+      format_num(median(.data[[variable]], na.rm = TRUE), params$round), " (",
+      format_num(quantile(.data[[variable]], 0.25, na.rm = TRUE), params$round), " - ",
+      format_num(quantile(.data[[variable]], 0.75, na.rm = TRUE), params$round), ")"
     )) %>%
     select(clean) %>%
     t()
@@ -62,7 +59,7 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
   ## Doing a Mann whitney/K-wallis test if there is a p value column.
   if ("p" %in% colnames) {
     test <- params$data %>%
-      summarise(test = format_pvalue(kruskal.test(get(variable) ~ get(params$strata))$p.value)) %>%
+      summarise(test = format_pvalue(kruskal.test(.data[[variable]] ~ .data[[params$strata]])$p.value)) %>%
       select(test) %>%
       t()
     all <- c(all, test)
@@ -110,23 +107,20 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
   # Saving the column names for later.
   colnames <- colnames(params$output)
 
-  # I get the median and IQR for whichever variable, paste them together as characters,
-  # and save it all in the output dataframe
-
   by_strata <- params$data %>%
-    group_by(get(params$strata), .drop = FALSE) %>%
+    group_by(.data[[params$strata]], .drop = FALSE) %>%
     summarise(clean = paste0(
-      format_num(mean(get(variable), na.rm = TRUE), params$round), " (",
-      format_num(sd(get(variable), na.rm = TRUE), params$round), ")"
-    )) %>%
+      format_num(mean(.data[[variable]], na.rm = TRUE), params$round), " (",
+      format_num(sd(.data[[variable]], na.rm = TRUE), params$round), ")"
+    ), .groups = "drop") %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
   total <- params$data %>%
     summarise(clean = paste0(
-      format_num(mean(get(variable), na.rm = TRUE), params$round), " (",
-      format_num(sd(get(variable), na.rm = TRUE), params$round), ")"
+      format_num(mean(.data[[variable]], na.rm = TRUE), params$round), " (",
+      format_num(sd(.data[[variable]], na.rm = TRUE), params$round), ")"
     )) %>%
     select(clean) %>%
     t()
@@ -137,7 +131,7 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
   ## Doing a oneway ANOVA test.
   if ("p" %in% colnames) {
     test <- params$data %>%
-      summarise(test = format_pvalue(oneway.test(get(variable) ~ get(params$strata))$p.value)) %>%
+      summarise(test = format_pvalue(oneway.test(.data[[variable]] ~ .data[[params$strata]])$p.value)) %>%
       select(test) %>%
       t()
     all <- c(all, test)
@@ -146,7 +140,6 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
   # Renaming the variables to let the 2 data frames stack on top of each other.
   new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
   colnames(new_output) <- colnames
-
 
   return_output(params, new_output)
 }
@@ -202,46 +195,44 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
   params$data[[variable]] <- suppressWarnings(fct_relevel(params$data[[variable]], "Missing", after = Inf))
 
   # Working out what the denominator should be. If ID is specified,
-  # everthing gets counted once per ID. If not, once per row.
+  # everything gets counted once per ID. If not, once per row.
   if (id != "") {
     denominators <- params$data %>%
       distinct(across(c(id, params$strata))) %>%
-      group_by(get(params$strata)) %>%
-      summarise(den = n())
+      group_by(.data[[params$strata]]) %>%
+      summarise(den = n(), .groups = "drop")
     total_den <- n_distinct(params$data[[id]])
   } else {
     denominators <- params$data %>%
-      group_by(get(params$strata)) %>%
-      summarise(den = n())
+      group_by(.data[[params$strata]]) %>%
+      summarise(den = n(), .groups = "drop")
     total_den <- nrow(params$data)
   }
 
   # Doing it for the strata.
   by_strata <-
     params$data %>%
-    group_by(get(params$strata), get(variable), .drop = FALSE) %>%
-    summarise(n = n()) %>%
-    ungroup() %>%
-    complete(`get(params$strata)`, `get(variable)`, fill = list(n = 0)) %>%
-    left_join(denominators, by = c("get(params$strata)")) %>%
-    group_by(`get(params$strata)`) %>%
+    group_by(.data[[params$strata]], .data[[variable]], .drop = FALSE) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    complete(.data[[params$strata]], .data[[variable]], fill = list(n = 0)) %>%
+    left_join(denominators, by = params$strata) %>%
+    group_by(.data[[params$strata]]) %>%
     mutate(perc = paste0(n, " (", format_num(100 * n / den, params$round), ")")) %>%
     select(-n, -den) %>%
-    pivot_wider(names_from = `get(params$strata)`, values_from = perc) %>%
-    select(-`get(variable)`)
+    pivot_wider(names_from = all_of(params$strata), values_from = perc) %>%
+    select(-all_of(variable))
 
   # Now the total.
   total <-
     params$data %>%
-    group_by(get(variable), .drop = FALSE) %>%
-    summarise(n = n()) %>%
-    ungroup() %>%
-    complete(`get(variable)`, fill = list(n = 0)) %>%
+    group_by(.data[[variable]], .drop = FALSE) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    complete(.data[[variable]], fill = list(n = 0)) %>%
     mutate(perc = paste0(n, " (", format_num(100 * n / total_den, params$round), ")"))
 
   # Joining them together
   all <- cbind(total, by_strata) %>%
-    mutate(`get(variable)` = as.character(`get(variable)`))
+    mutate(!!variable := as.character(.data[[variable]]))
 
   # Sorting by total frequency instead of default factor ordering if required.
   if (sort_by_freq) {
@@ -259,7 +250,7 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
   # Doing a chi-square test if necessary
   if ("p" %in% colnames) {
     test <- params$data %>%
-      summarise(test = format_pvalue(chisq.test(get(variable), get(params$strata))$p.value)) %>%
+      summarise(test = format_pvalue(chisq.test(.data[[variable]], .data[[params$strata]])$p.value)) %>%
       select(test) %>%
       t()
 
@@ -312,18 +303,15 @@ get_sum <- function(data, strata, variable, name, output,
   # Saving the column names for later.
   colnames <- colnames(params$output)
 
-  # I get the sum for whichever variable, paste them together as characters,
-  # and save it all in the output dataframe
-
   by_strata <- params$data %>%
-    group_by(get(params$strata), .drop = FALSE) %>%
-    summarise(clean = format_num((sum(get(variable), na.rm = TRUE)), params$round)) %>%
+    group_by(.data[[params$strata]], .drop = FALSE) %>%
+    summarise(clean = format_num((sum(.data[[variable]], na.rm = TRUE)), params$round), .groups = "drop") %>%
     select(clean) %>%
     t()
 
   # Now, getting the total to put at the beginning.
   total <- params$data %>%
-    summarise(clean = format_num((sum(get(variable), na.rm = TRUE)), params$round)) %>%
+    summarise(clean = format_num((sum(.data[[variable]], na.rm = TRUE)), params$round)) %>%
     select(clean) %>%
     t()
 
@@ -377,16 +365,15 @@ get_count <- function(data, strata, variable, name, output) {
   # Doing it for the strata.
   by_strata <-
     params$data %>%
-    group_by(get(params$strata), .drop = FALSE) %>%
-    summarise(n = sum(!is.na(get(variable)))) %>%
+    group_by(.data[[params$strata]], .drop = FALSE) %>%
+    summarise(n = sum(!is.na(.data[[variable]])), .groups = "drop") %>%
     select(n) %>%
     t()
-
 
   # Now the total.
   total <-
     params$data %>%
-    summarise(n = sum(!is.na(get(variable)))) %>%
+    summarise(n = sum(!is.na(.data[[variable]]))) %>%
     select(n) %>%
     t()
 
@@ -440,18 +427,17 @@ get_unique_count <- function(data, strata, variable, name, output) {
   # Doing it for the strata.
   by_strata <-
     params$data %>%
-    distinct(get(params$strata), get(variable), .keep_all = TRUE) %>%
-    group_by(get(params$strata), .drop = FALSE) %>%
-    summarise(n = sum(!is.na(get(variable)))) %>%
+    distinct(.data[[params$strata]], .data[[variable]], .keep_all = TRUE) %>%
+    group_by(.data[[params$strata]], .drop = FALSE) %>%
+    summarise(n = sum(!is.na(.data[[variable]])), .groups = "drop") %>%
     select(n) %>%
     t()
-
 
   # Now the total.
   total <-
     params$data %>%
-    distinct(get(variable), .keep_all = TRUE) %>%
-    summarise(n = sum(!is.na(get(variable)))) %>%
+    distinct(.data[[variable]], .keep_all = TRUE) %>%
+    summarise(n = sum(!is.na(.data[[variable]]))) %>%
     select(n) %>%
     t()
 
@@ -510,21 +496,21 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
   # Doing it for the strata.
   by_strata <-
     params$data %>%
-    group_by(get(params$strata), .drop = FALSE) %>%
+    group_by(.data[[params$strata]], .drop = FALSE) %>%
     summarise(
-      n = sum(get(variable) == value, na.rm = TRUE),
+      n = sum(.data[[variable]] == value, na.rm = TRUE),
       total = n(),
-      perc = paste0(n, " (", format_num(100 * n / total, params$round), ")")
+      perc = paste0(n, " (", format_num(100 * n / total, params$round), ")"),
+      .groups = "drop"
     ) %>%
     select(perc) %>%
     t()
-
 
   # Now the total.
   total <-
     params$data %>%
     summarise(
-      n = sum(get(variable) == value, na.rm = TRUE),
+      n = sum(.data[[variable]] == value, na.rm = TRUE),
       total = n(),
       perc = paste0(n, " (", format_num(100 * n / total, params$round), ")")
     ) %>%
@@ -534,11 +520,10 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
   # Filling the first variable in with the row label.
   all <- c(paste0(name, " N(%)"), total, by_strata)
 
-  ## No test.
+  ## Chi-square test if p column present.
   if ("p" %in% colnames) {
-    # Need to create summary table for prop.test.
     test <- params$data %>%
-      summarise(test = format_pvalue(chisq.test(get(variable), get(params$strata))$p.value)) %>%
+      summarise(test = format_pvalue(chisq.test(.data[[variable]], .data[[params$strata]])$p.value)) %>%
       select(test) %>%
       t()
 
@@ -584,21 +569,21 @@ get_availability <- function(data, strata, variable, name, output, round = 2) {
   # Doing it for the strata.
   by_strata <-
     params$data %>%
-    group_by(get(params$strata), .drop = FALSE) %>%
+    group_by(.data[[params$strata]], .drop = FALSE) %>%
     summarise(
-      n = sum(!is.na(get(variable)), na.rm = TRUE),
+      n = sum(!is.na(.data[[variable]]), na.rm = TRUE),
       total = n(),
-      perc = paste0(n, " (", format_num(100 * n / total, params$round), ")")
+      perc = paste0(n, " (", format_num(100 * n / total, params$round), ")"),
+      .groups = "drop"
     ) %>%
     select(perc) %>%
     t()
-
 
   # Now the total.
   total <-
     params$data %>%
     summarise(
-      n = sum(!is.na(get(variable)), na.rm = TRUE),
+      n = sum(!is.na(.data[[variable]]), na.rm = TRUE),
       total = n(),
       perc = paste0(n, " (", format_num(100 * n / total, params$round), ")")
     ) %>%

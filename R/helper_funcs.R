@@ -24,9 +24,9 @@ make_output_df <- function(data, strata, include_tests = FALSE, round = 2) {
   # Getting levels counts
   levels <- levels(data[[strata]])
   strata_names <- data %>%
-    group_by(get(strata), .drop = FALSE) %>%
-    summarise(n = n()) %>%
-    mutate(names = paste0(`get(strata)`, " (N=", n, ")"))  # FIX: Added backticks
+    group_by(.data[[strata]], .drop = FALSE) %>%
+    summarise(n = n(), .groups = "drop") %>%
+    mutate(names = paste0(.data[[strata]], " (N=", n, ")"))
   total_name <- paste0("Total", " (N=", nrow(data), ")")
   if (include_tests) {
     output <- data.frame(matrix(ncol = 3 + length(levels), nrow = 0))
