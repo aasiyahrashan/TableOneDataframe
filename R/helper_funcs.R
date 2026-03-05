@@ -8,6 +8,9 @@
 #' @import dplyr
 #' @export
 make_output_df <- function(data, strata, include_tests = FALSE, round = 2) {
+  # Coerce to plain tibble upfront so that data.table and other subclasses don't
+  # cause factor attributes to be silently dropped by downstream dplyr operations.
+  data <- as_tibble(data)
   # Data can't be grouped already
   if (is_grouped_df(data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
