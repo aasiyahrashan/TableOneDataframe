@@ -1,18 +1,23 @@
-#' Title Get Median and IQR for a particular variable.
+#' Get Median and IQR for a particular variable.
 #'
-#' Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.
+#' Does a Mann-Whitney/Kruskal-Wallis test if the output data frame has a p value column.
 #'
-#' @param data Either a tibble OR a table_builder object from make_output_df
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (optional if using table_builder object)
-#' @param variable name of variable to be summarised
-#' @param name string name to put in the row.
-#' @param output The dataframe to append the requested summary to (optional if using table_builder object)
-#' @param round The number of decimal places to round to. (optional if using table_builder object)
+#' @param data A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).
+#' @param strata The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+#'   In legacy mode, this argument is required.
+#' @param variable Name of the numeric variable to summarise.
+#' @param name String label for this row in the output table.
+#' @param output The data frame to append results to.
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   In legacy mode, this argument is required.
+#' @param round Number of decimal places. In pipe mode, omit to use the default set in \code{make_output_df()}. Can be overridden per-row if needed.
 #'
 #' @import dplyr
 #'
 #' @export
-get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
+get_median_iqr <- function(data, strata = NULL, variable, name, output = NULL, round = NULL) {
   # Extract parameters (handles both modes)
   params <- extract_params(data, strata, output, round)
 
@@ -72,21 +77,26 @@ get_median_iqr <- function(data, strata, variable, name, output, round = 2) {
   return_output(params, new_output)
 }
 
-#' Title Get mean and SD for a particular variable. By group.
+#' Get mean and SD for a particular variable.
 #'
-#' Does a one-way ANOVA test (t-test if only 2 groups) if there the output dataframe had a p value column.
+#' Does a one-way ANOVA test (t-test if only 2 groups) if the output data frame has a p value column.
 #'
-#' @param data Either a tibble OR a table_builder object from make_output_df
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (optional if using table_builder object)
-#' @param variable name of variable to be summarised
-#' @param name string name to put in the row.
-#' @param output The dataframe to append the requested summary to (optional if using table_builder object)
-#' @param round The number of decimal places to round results to. (optional if using table_builder object)
+#' @param data A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).
+#' @param strata The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+#'   In legacy mode, this argument is required.
+#' @param variable Name of the numeric variable to summarise.
+#' @param name String label for this row in the output table.
+#' @param output The data frame to append results to.
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   In legacy mode, this argument is required.
+#' @param round Number of decimal places. In pipe mode, omit to use the default set in \code{make_output_df()}. Can be overridden per-row if needed.
 #'
 #' @import dplyr
 #'
 #' @export
-get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
+get_mean_sd <- function(data, strata = NULL, variable, name, output = NULL, round = NULL) {
   # Extract parameters (handles both modes)
   params <- extract_params(data, strata, output, round)
 
@@ -151,21 +161,27 @@ get_mean_sd <- function(data, strata, variable, name, output, round = 2) {
 #' NAs and empty strings are converted to a separate level "Missing"
 #' Does a chisquare test if the 'output' argument has a p value column in it.
 #' Unless ID variable is specified, the denominator is the number of rows in the dataset.
-#' @param data Either a tibble OR a table_builder object from make_output_df
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (optional if using table_builder object)
-#' @param variable Ideally a factor variable. If not, gets converted to factor anyway.
-#' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to (optional if using table_builder object)
-#' @param id Optional. Character vector containing name of variable to use when counting the denominator. Allows the sum of the numerators to be greater than 100 if there is more than one row per denominator variable.
-#' @param round The number of decimal places to round results to (optional if using table_builder object)
-#' @param sort_by_freq TRUE/FALSE for whether to overwrite factor ordering and sort in descending order of total frequency.
-#' @param data_override Override data in table_builder object with this data frame (optional, rarely used)
+#' @param data A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).
+#' @param strata The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+#'   In legacy mode, this argument is required.
+#' @param variable Factor variable to summarise. Non-factors are coerced to factor automatically.
+#' @param name String label for this row in the output table.
+#' @param output The data frame to append results to.
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   In legacy mode, this argument is required.
+#' @param id Optional. Name of the ID variable to use as the denominator. Useful for repeated-measures
+#'   data where the sum of numerators can exceed 100.
+#' @param round Number of decimal places. In pipe mode, omit to use the default set in \code{make_output_df()}. Can be overridden per-row if needed.
+#' @param sort_by_freq If TRUE, rows are sorted by descending total frequency rather than factor level order.
+#' @param data_override Optionally override the data in the builder object with a different data frame. Rarely needed.
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
-get_n_percent <- function(data, strata, variable, name, output, id = "", round = 2,
+get_n_percent <- function(data, strata = NULL, variable, name, output = NULL, id = "", round = NULL,
                           sort_by_freq = FALSE, data_override = NULL) {
   params <- extract_params(data, strata, output, round, data_override)
 
@@ -272,18 +288,23 @@ get_n_percent <- function(data, strata, variable, name, output, id = "", round =
 #' Get sum of a numeric variable.
 #' Treats missing values as zero.
 #'
-#' @param data Either a tibble OR a table_builder object from make_output_df
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)
-#' @param variable Numeric variable to get sum for
-#' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to (Optional if using table_builder object)
+#' @param data A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).
+#' @param strata The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+#'   In legacy mode, this argument is required.
+#' @param variable Numeric variable to sum. Missing values are treated as zero.
+#' @param name String label for this row in the output table.
+#' @param output The data frame to append results to.
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   In legacy mode, this argument is required.
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
-get_sum <- function(data, strata, variable, name, output,
-                    round = 2) {
+get_sum <- function(data, strata = NULL, variable, name, output = NULL,
+                    round = NULL) {
   params <- extract_params(data, strata, output, round)
 
   # Data can't be grouped already
@@ -336,17 +357,22 @@ get_sum <- function(data, strata, variable, name, output,
 #' Count number of non-missing values
 #' Displays number of non-missing rows.
 #'
-#' @param data Either a tibble OR a table_builder object from make_output_df
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)
-#' @param variable Ideally a factor variable. If not, gets converted to factor anyway.
-#' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to (Optional if using table_builder object)
+#' @param data A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).
+#' @param strata The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+#'   In legacy mode, this argument is required.
+#' @param variable Variable to count non-missing values for.
+#' @param name String label for this row in the output table.
+#' @param output The data frame to append results to.
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   In legacy mode, this argument is required.
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
-get_count <- function(data, strata, variable, name, output) {
+get_count <- function(data, strata = NULL, variable, name, output = NULL) {
   params <- extract_params(data, strata, output)
 
   # Data can't be grouped already
@@ -398,17 +424,22 @@ get_count <- function(data, strata, variable, name, output) {
 #' Count number of unique non-missing values
 #' Displays number of non-missing rows.
 #'
-#' @param data Either a tibble OR a table_builder object from make_output_df
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)
-#' @param variable Ideally a factor variable. If not, gets converted to factor anyway.
-#' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to (Optional if using table_builder object)
+#' @param data A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).
+#' @param strata The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+#'   In legacy mode, this argument is required.
+#' @param variable Variable to count unique non-missing values for.
+#' @param name String label for this row in the output table.
+#' @param output The data frame to append results to.
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   In legacy mode, this argument is required.
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
-get_unique_count <- function(data, strata, variable, name, output) {
+get_unique_count <- function(data, strata = NULL, variable, name, output = NULL) {
   params <- extract_params(data, strata, output)
 
   # Data can't be grouped already
@@ -465,19 +496,25 @@ get_unique_count <- function(data, strata, variable, name, output) {
 #' NA values are not included in the numerator, but are included in the denominator.
 #' Chi squared test. Equivalent to Z test if only 2 groups.
 #'
-#' @param data Either a tibble OR a table_builder object from make_output_df
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)
-#' @param variable Ideally a factor variable. If not, gets converted to factor anyway.
-#' @param value Which value to count.
-#' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to (optional if using table_builder object)
-#' @param round The number of decimal places to round results to. (optional if using table_builder object)
+#' @param data A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).
+#' @param strata The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+#'   In legacy mode, this argument is required.
+#' @param variable Variable to check.
+#' @param value The specific value to count occurrences of. Always pass this as a named argument
+#'   (e.g. \code{value = 1}) to avoid ambiguity with positional argument matching.
+#' @param name String label for this row in the output table.
+#' @param output The data frame to append results to.
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   In legacy mode, this argument is required.
+#' @param round Number of decimal places. In pipe mode, omit to use the default set in \code{make_output_df()}. Can be overridden per-row if needed.
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
-get_n_percent_value <- function(data, strata, variable, value, name, output, round = 2) {
+get_n_percent_value <- function(data, strata = NULL, variable, value, name, output = NULL, round = NULL) {
   params <- extract_params(data, strata, output, round)
 
   # Data can't be grouped already
@@ -539,18 +576,23 @@ get_n_percent_value <- function(data, strata, variable, value, name, output, rou
 
 #' Get N(%) availability - the number of times the variable is not NA
 #'
-#' @param data Either a tibble OR a table_builder object from make_output_df
-#' @param strata variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)
-#' @param variable Variable to check availability for. Can be numeric, string, factor.
-#' @param name string name to put into the row
-#' @param output The dataframe to append the requested summary to (Optional if using table_builder object)
-#' @param round The number of decimal places to round results to. (Optional if using table_builder object)
+#' @param data A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).
+#' @param strata The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+#'   In legacy mode, this argument is required.
+#' @param variable Variable to check availability for. Can be numeric, string, or factor.
+#' @param name String label for this row in the output table.
+#' @param output The data frame to append results to.
+#'   \strong{In pipe mode, omit this argument} — it is read from the builder object.
+#'   In legacy mode, this argument is required.
+#' @param round Number of decimal places. In pipe mode, omit to use the default set in \code{make_output_df()}. Can be overridden per-row if needed.
 #'
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
-get_availability <- function(data, strata, variable, name, output, round = 2) {
+get_availability <- function(data, strata = NULL, variable, name, output = NULL, round = NULL) {
   params <- extract_params(data, strata, output, round)
 
   # Data can't be grouped already

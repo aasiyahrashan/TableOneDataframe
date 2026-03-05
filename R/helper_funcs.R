@@ -72,6 +72,12 @@ extract_params <- function(data_or_builder, strata, output, round, data_override
     )
   } else {
     # Legacy mode: data_or_builder is the actual data
+    if (is.null(strata)) {
+      stop("Argument `strata` is missing. In legacy mode all arguments are required.")
+    }
+    if (is.null(output)) {
+      stop("Argument `output` is missing. In legacy mode all arguments are required.")
+    }
     # BUT output might be a table_builder object from a previous call
     actual_output <- if (inherits(output, "table_builder")) output$output else output
 

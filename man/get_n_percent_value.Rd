@@ -4,22 +4,36 @@
 \alias{get_n_percent_value}
 \title{Count number of times a value is present in a variable}
 \usage{
-get_n_percent_value(data, strata, variable, value, name, output, round = 2)
+get_n_percent_value(
+  data,
+  strata = NULL,
+  variable,
+  value,
+  name,
+  output = NULL,
+  round = NULL
+)
 }
 \arguments{
-\item{data}{Either a tibble OR a table_builder object from make_output_df}
+\item{data}{A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).}
 
-\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work. (Optional if using table_builder object)}
+\item{strata}{The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+\strong{In pipe mode, omit this argument} — it is read from the builder object.
+Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+In legacy mode, this argument is required.}
 
-\item{variable}{Ideally a factor variable. If not, gets converted to factor anyway.}
+\item{variable}{Variable to check.}
 
-\item{value}{Which value to count.}
+\item{value}{The specific value to count occurrences of. Always pass this as a named argument
+(e.g. \code{value = 1}) to avoid ambiguity with positional argument matching.}
 
-\item{name}{string name to put into the row}
+\item{name}{String label for this row in the output table.}
 
-\item{output}{The dataframe to append the requested summary to (optional if using table_builder object)}
+\item{output}{The data frame to append results to.
+\strong{In pipe mode, omit this argument} — it is read from the builder object.
+In legacy mode, this argument is required.}
 
-\item{round}{The number of decimal places to round results to. (optional if using table_builder object)}
+\item{round}{Number of decimal places. In pipe mode, omit to use the default set in \code{make_output_df()}. Can be overridden per-row if needed.}
 }
 \description{
 NA values are not included in the numerator, but are included in the denominator.

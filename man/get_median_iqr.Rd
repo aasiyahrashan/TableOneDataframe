@@ -2,23 +2,35 @@
 % Please edit documentation in R/funcs.R
 \name{get_median_iqr}
 \alias{get_median_iqr}
-\title{Title Get Median and IQR for a particular variable.}
+\title{Get Median and IQR for a particular variable.}
 \usage{
-get_median_iqr(data, strata, variable, name, output, round = 2)
+get_median_iqr(
+  data,
+  strata = NULL,
+  variable,
+  name,
+  output = NULL,
+  round = NULL
+)
 }
 \arguments{
-\item{data}{Either a tibble OR a table_builder object from make_output_df}
+\item{data}{A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).}
 
-\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work. (optional if using table_builder object)}
+\item{strata}{The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+\strong{In pipe mode, omit this argument} — it is read from the builder object.
+Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+In legacy mode, this argument is required.}
 
-\item{variable}{name of variable to be summarised}
+\item{variable}{Name of the numeric variable to summarise.}
 
-\item{name}{string name to put in the row.}
+\item{name}{String label for this row in the output table.}
 
-\item{output}{The dataframe to append the requested summary to (optional if using table_builder object)}
+\item{output}{The data frame to append results to.
+\strong{In pipe mode, omit this argument} — it is read from the builder object.
+In legacy mode, this argument is required.}
 
-\item{round}{The number of decimal places to round to. (optional if using table_builder object)}
+\item{round}{Number of decimal places. In pipe mode, omit to use the default set in \code{make_output_df()}. Can be overridden per-row if needed.}
 }
 \description{
-Does a Mann-Whitney/K-Wallis test if there the output dataframe had a p value column.
+Does a Mann-Whitney/Kruskal-Wallis test if the output data frame has a p value column.
 }

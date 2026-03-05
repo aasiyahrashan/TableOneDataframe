@@ -6,34 +6,40 @@
 \usage{
 get_n_percent(
   data,
-  strata,
+  strata = NULL,
   variable,
   name,
-  output,
+  output = NULL,
   id = "",
-  round = 2,
+  round = NULL,
   sort_by_freq = FALSE,
   data_override = NULL
 )
 }
 \arguments{
-\item{data}{Either a tibble OR a table_builder object from make_output_df}
+\item{data}{A tibble (legacy mode) or a table_builder object from \code{make_output_df()} (pipe mode).}
 
-\item{strata}{variable to stratify output by. Needs to be a factor to force to ordering to work. (optional if using table_builder object)}
+\item{strata}{The factor variable to stratify by. Must be a factor (character and numeric are not accepted).
+\strong{In pipe mode, omit this argument} — it is read from the builder object.
+Passing it positionally in pipe mode will throw a clear error; use named arguments if needed.
+In legacy mode, this argument is required.}
 
-\item{variable}{Ideally a factor variable. If not, gets converted to factor anyway.}
+\item{variable}{Factor variable to summarise. Non-factors are coerced to factor automatically.}
 
-\item{name}{string name to put into the row}
+\item{name}{String label for this row in the output table.}
 
-\item{output}{The dataframe to append the requested summary to (optional if using table_builder object)}
+\item{output}{The data frame to append results to.
+\strong{In pipe mode, omit this argument} — it is read from the builder object.
+In legacy mode, this argument is required.}
 
-\item{id}{Optional. Character vector containing name of variable to use when counting the denominator. Allows the sum of the numerators to be greater than 100 if there is more than one row per denominator variable.}
+\item{id}{Optional. Name of the ID variable to use as the denominator. Useful for repeated-measures
+data where the sum of numerators can exceed 100.}
 
-\item{round}{The number of decimal places to round results to (optional if using table_builder object)}
+\item{round}{Number of decimal places. In pipe mode, omit to use the default set in \code{make_output_df()}. Can be overridden per-row if needed.}
 
-\item{sort_by_freq}{TRUE/FALSE for whether to overwrite factor ordering and sort in descending order of total frequency.}
+\item{sort_by_freq}{If TRUE, rows are sorted by descending total frequency rather than factor level order.}
 
-\item{data_override}{Override data in table_builder object with this data frame (optional, rarely used)}
+\item{data_override}{Optionally override the data in the builder object with a different data frame. Rarely needed.}
 }
 \description{
 Gets count and percentage for factor variables by group.
