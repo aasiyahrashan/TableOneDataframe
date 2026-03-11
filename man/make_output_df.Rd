@@ -4,7 +4,13 @@
 \alias{make_output_df}
 \title{Make output dataframe}
 \usage{
-make_output_df(data, strata, include_tests = FALSE, round = 2)
+make_output_df(
+  data,
+  strata,
+  include_tests = FALSE,
+  round = 2,
+  include_smd = FALSE
+)
 }
 \arguments{
 \item{data}{tibble containing data. Can't be a grouped tibble. Also, can't have a variable named 'variable'.}
@@ -14,6 +20,8 @@ make_output_df(data, strata, include_tests = FALSE, round = 2)
 \item{include_tests}{Should it create a space for p-values?}
 
 \item{round}{Default number of decimal places for all subsequent operations}
+
+\item{include_smd}{Should it create a space for standardised mean differences? Only valid for 2-level strata.}
 }
 \description{
 Includes neat column names with counts of observations in each group.

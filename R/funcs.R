@@ -21,6 +21,9 @@ get_median_iqr <- function(data, strata = NULL, variable, name, output = NULL, r
   # Extract parameters (handles both modes)
   params <- extract_params(data, strata, output, round)
 
+  if (!variable %in% names(params$data)) {
+    stop("Variable '", variable, "' not found in data.")
+  }
   # Data can't be grouped already
   if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
@@ -70,6 +73,11 @@ get_median_iqr <- function(data, strata = NULL, variable, name, output = NULL, r
     all <- c(all, test)
   }
 
+  ## SMD if requested.
+  if ("SMD" %in% colnames) {
+    all <- c(all, compute_smd(params$data, variable, params$strata))
+  }
+
   # Renaming the variables to let the 2 data frames stack on top of each other.
   new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
   colnames(new_output) <- colnames
@@ -100,6 +108,9 @@ get_mean_sd <- function(data, strata = NULL, variable, name, output = NULL, roun
   # Extract parameters (handles both modes)
   params <- extract_params(data, strata, output, round)
 
+  if (!variable %in% names(params$data)) {
+    stop("Variable '", variable, "' not found in data.")
+  }
   # Data can't be grouped already
   if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
@@ -147,6 +158,11 @@ get_mean_sd <- function(data, strata = NULL, variable, name, output = NULL, roun
     all <- c(all, test)
   }
 
+  ## SMD if requested.
+  if ("SMD" %in% colnames) {
+    all <- c(all, compute_smd(params$data, variable, params$strata))
+  }
+
   # Renaming the variables to let the 2 data frames stack on top of each other.
   new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
   colnames(new_output) <- colnames
@@ -185,6 +201,9 @@ get_n_percent <- function(data, strata = NULL, variable, name, output = NULL, id
                           sort_by_freq = FALSE, data_override = NULL) {
   params <- extract_params(data, strata, output, round, data_override)
 
+  if (!variable %in% names(params$data)) {
+    stop("Variable '", variable, "' not found in data.")
+  }
   # Data can't be grouped already
   if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
@@ -276,6 +295,12 @@ get_n_percent <- function(data, strata = NULL, variable, name, output = NULL, id
     all["p"] <- ""
   }
 
+  # SMD if requested — uses override data since variable lives there.
+  if ("SMD" %in% colnames) {
+    top_row <- c(top_row, compute_smd(params$data, variable, params$strata))
+    all["SMD"] <- ""
+  }
+
   all <- rbind(top_row, all)
   # Renaming the variables to let the 2 data frames stack on top of each other.
   colnames(all) <- colnames
@@ -307,6 +332,9 @@ get_sum <- function(data, strata = NULL, variable, name, output = NULL,
                     round = NULL) {
   params <- extract_params(data, strata, output, round)
 
+  if (!variable %in% names(params$data)) {
+    stop("Variable '", variable, "' not found in data.")
+  }
   # Data can't be grouped already
   if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
@@ -348,6 +376,11 @@ get_sum <- function(data, strata = NULL, variable, name, output = NULL,
     all <- c(all, test)
   }
 
+  ## No SMD for sums.
+  if ("SMD" %in% colnames) {
+    all <- c(all, "")
+  }
+
   # Renaming the variables to let the 2 data frames stack on top of each other.
   new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
   colnames(new_output) <- colnames
@@ -375,6 +408,9 @@ get_sum <- function(data, strata = NULL, variable, name, output = NULL,
 get_count <- function(data, strata = NULL, variable, name, output = NULL) {
   params <- extract_params(data, strata, output)
 
+  if (!variable %in% names(params$data)) {
+    stop("Variable '", variable, "' not found in data.")
+  }
   # Data can't be grouped already
   if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
@@ -415,6 +451,11 @@ get_count <- function(data, strata = NULL, variable, name, output = NULL) {
     all <- c(all, test)
   }
 
+  ## No SMD for counts.
+  if ("SMD" %in% colnames) {
+    all <- c(all, "")
+  }
+
   # Renaming the variables to let the 2 data frames stack on top of each other.
   new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
   colnames(new_output) <- colnames
@@ -442,6 +483,9 @@ get_count <- function(data, strata = NULL, variable, name, output = NULL) {
 get_unique_count <- function(data, strata = NULL, variable, name, output = NULL) {
   params <- extract_params(data, strata, output)
 
+  if (!variable %in% names(params$data)) {
+    stop("Variable '", variable, "' not found in data.")
+  }
   # Data can't be grouped already
   if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
@@ -484,6 +528,11 @@ get_unique_count <- function(data, strata = NULL, variable, name, output = NULL)
     all <- c(all, test)
   }
 
+  ## No SMD for unique counts.
+  if ("SMD" %in% colnames) {
+    all <- c(all, "")
+  }
+
   # Renaming the variables to let the 2 data frames stack on top of each other.
   new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
   colnames(new_output) <- colnames
@@ -517,6 +566,9 @@ get_unique_count <- function(data, strata = NULL, variable, name, output = NULL)
 get_n_percent_value <- function(data, strata = NULL, variable, value, name, output = NULL, round = NULL) {
   params <- extract_params(data, strata, output, round)
 
+  if (!variable %in% names(params$data)) {
+    stop("Variable '", variable, "' not found in data.")
+  }
   # Data can't be grouped already
   if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
@@ -567,6 +619,11 @@ get_n_percent_value <- function(data, strata = NULL, variable, value, name, outp
     all <- c(all, test)
   }
 
+  ## SMD if requested.
+  if ("SMD" %in% colnames) {
+    all <- c(all, compute_smd(params$data, variable, params$strata))
+  }
+
   # Renaming the variables to let the 2 data frames stack on top of each other.
   new_output <- rbind(params$output, all, stringsAsFactors = FALSE)
   colnames(new_output) <- colnames
@@ -595,6 +652,9 @@ get_n_percent_value <- function(data, strata = NULL, variable, value, name, outp
 get_availability <- function(data, strata = NULL, variable, name, output = NULL, round = NULL) {
   params <- extract_params(data, strata, output, round)
 
+  if (!variable %in% names(params$data)) {
+    stop("Variable '", variable, "' not found in data.")
+  }
   # Data can't be grouped already
   if (is_grouped_df(params$data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
@@ -642,6 +702,11 @@ get_availability <- function(data, strata = NULL, variable, name, output = NULL,
       select(test) %>%
       t()
     all <- c(all, test)
+  }
+
+  ## No SMD for availability.
+  if ("SMD" %in% colnames) {
+    all <- c(all, "")
   }
 
   # Renaming the variables to let the 2 data frames stack on top of each other.

@@ -19,6 +19,7 @@ This package builds a 'Table One' for medical journals. It creates publication-r
 
 - Stratification by a factor variable (with one column per level)
 - Automatic statistical testing (Mann-Whitney, Kruskal-Wallis, chi-square, ANOVA)
+- Standardised mean differences (SMD) for balance assessment
 - Clean formatting suitable for direct export to Excel, CSV, or markdown
 ```{r setup}
 library(TableOneDataframe)
@@ -130,6 +131,44 @@ kable(table_counts$output)
 - `get_n_percent_value()` - Count/percentage of a specific value (uses chi-square test)
 - `get_availability()` - Percentage of non-missing values
 
+## Standardised Mean Differences
+
+Use `include_smd = TRUE` to add an SMD column for balance assessment. SMD is computed using the `smd` package and is only meaningful for 2-level strata — a warning will be issued and the column skipped if strata has more levels.
+
+SMD is reported on the header row for categorical variables, and on the data row for continuous variables.
+```{r smd}
+# SMD requires a 2-level strata variable
+mtcars$am <- factor(mtcars$am, labels = c("Automatic", "Manual"))
+
+table_smd <- make_output_df(mtcars, "am", include_smd = TRUE, round = 2) %>%
+  get_median_iqr(variable = 'mpg', name = "Miles per gallon") %>%
+  get_mean_sd(variable = 'hp', name = "Horsepower") %>%
+  get_n_percent(variable = 'gear', name = "Number of gears") %>%
+  get_n_percent_value(variable = 'vs', value = 1, name = "V-shaped engine") %>%
+  extract_df()
+
+kable(table_smd)
+```
+
+SMD and statistical tests can be requested together:
+```{r smd-and-tests}
+table_both <- make_output_df(mtcars, "am", include_tests = TRUE, include_smd = TRUE, round = 2) %>%
+  get_median_iqr(variable = 'mpg', name = "Miles per gallon") %>%
+  get_mean_sd(variable = 'hp', name = "Horsepower") %>%
+  get_n_percent(variable = 'gear', name = "Number of gears") %>%
+  extract_df()
+
+kable(table_both)
+```
+
+If you request SMD with 3+ strata levels, it is silently skipped with a warning:
+```{r smd-warning}
+# cyl has 3 levels — SMD will be skipped with a warning
+table_no_smd <- make_output_df(mtcars, "cyl", include_smd = TRUE, round = 2) %>%
+  get_median_iqr(variable = 'mpg', name = "Miles per gallon") %>%
+  extract_df()
+```
+
 ## Advanced Features
 
 ### Custom Rounding
@@ -166,12 +205,13 @@ mtcars$cyl <- factor(mtcars$cyl, levels = c("4", "6", "8"))
 mtcars$gear <- factor(mtcars$gear)
 mtcars$am <- factor(mtcars$am, levels = c(0, 1), labels = c("Automatic", "Manual"))
 
-# Build comprehensive table
-complete_table <- make_output_df(mtcars, "cyl", include_tests = TRUE, round = 1) %>%
+# Build comprehensive table with tests and SMD
+complete_table <- make_output_df(mtcars, "am", include_tests = TRUE, 
+                                 include_smd = TRUE, round = 1) %>%
   get_median_iqr(variable = 'mpg', name = "Miles per gallon") %>%
   get_mean_sd(variable = 'hp', name = "Horsepower") %>%
   get_median_iqr(variable = 'wt', name = "Weight (1000 lbs)") %>%
-  get_n_percent(variable = 'am', name = "Transmission") %>%
+  get_n_percent(variable = 'cyl', name = "Cylinders") %>%
   get_n_percent(variable = 'gear', name = "Number of gears") %>%
   extract_df()
 
@@ -179,11 +219,11 @@ complete_table <- make_output_df(mtcars, "cyl", include_tests = TRUE, round = 1)
 kable(complete_table)
 
 # Export to CSV
-# write.csv(complete_table$output, "table1.csv", row.names = FALSE)
+# write.csv(complete_table, "table1.csv", row.names = FALSE)
 
 # Or use with other packages
 # library(writexl)
-# write_xlsx(complete_table$output, "table1.xlsx")
+# write_xlsx(complete_table, "table1.xlsx")
 ```
 
 ## Tips
@@ -191,5 +231,6 @@ kable(complete_table)
 1. **Always make your strata variable a factor** before calling `make_output_df()`
 2. **Use the piped approach** for new code - it's cleaner and less error-prone
 3. **Set `include_tests = TRUE`** if you want automatic statistical testing
-4. **Use meaningful row names** - they appear in the first column of your table
-5. **The output is a standard dataframe** - use it with `knitr::kable()`, `writexl`, `write.csv()`, etc.
+4. **Use `include_smd = TRUE`** for balance assessment — requires a 2-level strata variable
+5. **Use meaningful row names** - they appear in the first column of your table
+6. **The output is a standard dataframe** - use it with `knitr::kable()`, `writexl`, `write.csv()`, etc.

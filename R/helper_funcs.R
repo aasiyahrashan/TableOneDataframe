@@ -4,10 +4,11 @@
 #' @param data tibble containing data. Can't be a grouped tibble. Also, can't have a variable named 'variable'.
 #' @param strata A factor variable to stratify by.
 #' @param include_tests Should it create a space for p-values?
+#' @param include_smd Should it create a space for standardised mean differences? Only valid for 2-level strata.
 #' @param round Default number of decimal places for all subsequent operations
 #' @import dplyr
 #' @export
-make_output_df <- function(data, strata, include_tests = FALSE, round = 2) {
+make_output_df <- function(data, strata, include_tests = FALSE, round = 2, include_smd = FALSE) {
   # Data can't be grouped already
   if (is_grouped_df(data)) {
     stop("The `data` provided is grouped. This is cause issues with later functions.
@@ -21,6 +22,11 @@ make_output_df <- function(data, strata, include_tests = FALSE, round = 2) {
   if ("variable" %in% colnames(data) | "Variable" %in% colnames(data)) {
     stop("There is a variable in the dataframe named 'variable'. Please rename it and try again.")
   }
+  # Warn if SMD requested with 3+ levels
+  if (include_smd && nlevels(data[[strata]]) != 2) {
+    warning("SMD is only meaningful for 2-level strata. SMD column will be skipped.")
+    include_smd <- FALSE
+  }
   # Getting levels counts
   levels <- levels(data[[strata]])
   strata_names <- data %>%
@@ -28,20 +34,26 @@ make_output_df <- function(data, strata, include_tests = FALSE, round = 2) {
     summarise(n = n(), .groups = "drop") %>%
     mutate(names = paste0(.data[[strata]], " (N=", n, ")"))
   total_name <- paste0("Total", " (N=", nrow(data), ")")
-  if (include_tests) {
-    output <- data.frame(matrix(ncol = 3 + length(levels), nrow = 0))
-    colnames(output) <- c("Variable", total_name, strata_names$names, "p")
-  } else {
-    output <- data.frame(matrix(ncol = 2 + length(levels), nrow = 0))
-    colnames(output) <- c("Variable", total_name, strata_names$names)
-  }
+
+  # Building column names based on requested extras
+  base_cols <- c("Variable", total_name, strata_names$names)
+  extra_cols <- c(
+    if (include_tests) "p",
+    if (include_smd) "SMD"
+  )
+  ncols <- length(base_cols) + length(extra_cols)
+
+  output <- data.frame(matrix(ncol = ncols, nrow = 0))
+  colnames(output) <- c(base_cols, extra_cols)
+
   # Return a table_builder object
   structure(
     list(
       output = output,
       data = data,
       strata = strata,
-      round = round
+      round = round,
+      include_smd = include_smd
     ),
     class = "table_builder"
   )
@@ -64,9 +76,11 @@ extract_params <- function(data_or_builder, strata, output, round, data_override
     # Builder mode: extract from object, but allow overrides
     list(
       data = if (!is.null(data_override)) data_override else data_or_builder$data,
+      main_data = data_or_builder$data,
       strata = if (!missing(strata) && !is.null(strata)) strata else data_or_builder$strata,
       output = if (!missing(output) && !is.null(output)) output else data_or_builder$output,
       round = if (!missing(round) && !is.null(round)) round else data_or_builder$round,
+      include_smd = data_or_builder$include_smd,
       builder_mode = TRUE,
       builder = data_or_builder
     )
@@ -83,9 +97,11 @@ extract_params <- function(data_or_builder, strata, output, round, data_override
 
     list(
       data = data_or_builder,
+      main_data = data_or_builder,
       strata = strata,
       output = actual_output,
       round = if (!missing(round)) round else 2,
+      include_smd = FALSE,
       builder_mode = FALSE,
       builder = NULL
     )
@@ -103,6 +119,19 @@ return_output <- function(params, new_output) {
     # Return just the dataframe
     return(new_output)
   }
+}
+
+#' Compute SMD for a variable against strata
+#' Returns formatted SMD string, or "" if it fails.
+#' @keywords internal
+#' @importFrom smd smd
+compute_smd <- function(data, variable, strata) {
+  tryCatch({
+    result <- smd(data[[variable]], data[[strata]])
+    format_num(abs(result$estimate), 2)
+  }, error = function(e) {
+    ""
+  })
 }
 
 format_num <- function(x, dp) {
