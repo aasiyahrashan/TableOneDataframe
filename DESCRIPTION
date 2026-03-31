@@ -20,4 +20,5 @@ VignetteBuilder: knitr, rmarkdown
 Imports: 
     forcats,
     dplyr,
-    tidyr
+    tidyr,
+    smd
