@@ -100,7 +100,7 @@ extract_params <- function(data_or_builder, strata, output, round, data_override
       main_data = data_or_builder,
       strata = strata,
       output = actual_output,
-      round = if (!missing(round)) round else 2,
+      round = if (!missing(round) && !is.null(round)) round else 2,
       include_smd = FALSE,
       builder_mode = FALSE,
       builder = NULL
