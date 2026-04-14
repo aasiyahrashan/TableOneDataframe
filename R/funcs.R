@@ -645,12 +645,16 @@ get_n_percent_value <- function(data, strata = NULL, variable, value, name, outp
 #'   In legacy mode, this argument is required.
 #' @param round Number of decimal places. In pipe mode, omit to use the default set in \code{make_output_df()}. Can be overridden per-row if needed.
 #'
+#' @param data_override Optionally override the data in the builder object with a different data frame.
+#'   When provided, availability is computed against this data frame instead of the builder data.
+#'   The strata variable must exist in the override data frame.
 #' @import dplyr
 #' @import forcats
 #' @import tidyr
 #' @export
-get_availability <- function(data, strata = NULL, variable, name, output = NULL, round = NULL) {
-  params <- extract_params(data, strata, output, round)
+get_availability <- function(data, strata = NULL, variable, name, output = NULL, round = NULL,
+                             data_override = NULL) {
+  params <- extract_params(data, strata, output, round, data_override)
 
   if (!variable %in% names(params$data)) {
     stop("Variable '", variable, "' not found in data.")

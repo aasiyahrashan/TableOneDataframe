@@ -10,7 +10,8 @@ get_availability(
   variable,
   name,
   output = NULL,
-  round = NULL
+  round = NULL,
+  data_override = NULL
 )
 }
 \arguments{
@@ -30,6 +31,10 @@ In legacy mode, this argument is required.}
 In legacy mode, this argument is required.}
 
 \item{round}{Number of decimal places. In pipe mode, omit to use the default set in \code{make_output_df()}. Can be overridden per-row if needed.}
+
+\item{data_override}{Optionally override the data in the builder object with a different data frame.
+When provided, availability is computed against this data frame instead of the builder data.
+The strata variable must exist in the override data frame.}
 }
 \description{
 Get N(\%) availability - the number of times the variable is not NA
