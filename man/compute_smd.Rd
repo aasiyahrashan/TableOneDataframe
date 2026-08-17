@@ -3,12 +3,16 @@
 \name{compute_smd}
 \alias{compute_smd}
 \title{Compute SMD for a variable against strata
-Returns formatted SMD string, or "" if it fails.}
+NAs in the variable are dropped, matching get_median_iqr() and get_mean_sd(), which also
+use na.rm = TRUE. Errors are not caught here — if smd() fails for another reason,
+that surfaces instead of being silently left blank.}
 \usage{
 compute_smd(data, variable, strata)
 }
 \description{
 Compute SMD for a variable against strata
-Returns formatted SMD string, or "" if it fails.
+NAs in the variable are dropped, matching get_median_iqr() and get_mean_sd(), which also
+use na.rm = TRUE. Errors are not caught here — if smd() fails for another reason,
+that surfaces instead of being silently left blank.
 }
 \keyword{internal}
