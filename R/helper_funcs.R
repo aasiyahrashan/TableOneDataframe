@@ -122,16 +122,14 @@ return_output <- function(params, new_output) {
 }
 
 #' Compute SMD for a variable against strata
-#' Returns formatted SMD string, or "" if it fails.
+#' NAs in the variable are dropped, matching get_median_iqr() and get_mean_sd(), which also
+#' use na.rm = TRUE. Errors are not caught here — if smd() fails for another reason,
+#' that surfaces instead of being silently left blank.
 #' @keywords internal
 #' @importFrom smd smd
 compute_smd <- function(data, variable, strata) {
-  tryCatch({
-    result <- smd(data[[variable]], data[[strata]])
-    format_num(abs(result$estimate), 2)
-  }, error = function(e) {
-    ""
-  })
+  result <- smd(data[[variable]], data[[strata]], na.rm = TRUE)
+  format_num(abs(result$estimate), 2)
 }
 
 format_num <- function(x, dp) {
